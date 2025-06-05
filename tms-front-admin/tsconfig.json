@@ -1,0 +1,27 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.web.json",
+  "include": [
+    "env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "src/**/*.ts",
+    "src/**/*.d.ts"
+  ],
+  "compilerOptions": {
+    "lib": ["es2017"],
+    "ignoreDeprecations": "5.0",
+    "noImplicitAny": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "composite": true,
+    "declaration": true,
+    "outDir": "./dist"
+  },
+  "references": [
+    {
+      "path": "./tsconfig.config.json"
+    }
+  ]
+}
