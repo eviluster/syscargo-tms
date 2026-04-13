@@ -1,0 +1,189 @@
+################################################################################
+# 📦  CI/CD – Deploy (self-hosted, mismo VPS)                                  #
+################################################################################
+name: Pre-deploy # (self-hosted) 
+
+on:
+  workflow_run:
+    workflows:
+      - "Direct Selective Sync dev → staging"
+    types:
+      - completed
+  push:
+    branches:
+      - staging
+# Evita despliegues simultaneos en la misma rama 
+concurrency:
+  group: staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'push')
+    runs-on: self-hosted
+    environment: staging
+
+    steps:
+    # 1) Obtener el código
+    - name: Checkout codigo
+      uses: actions/checkout@v4
+
+    # 2) Limpiar .git
+    - name: 🧹 Eliminar carpeta .git
+      run: rm -rf .git
+
+    # 3) Copiar / sincronizar dentro del VPS
+    - name: 📤 Copiar repo al directorio de trabajo
+      run: |
+        PROJECT_DIR="/mnt/Data/syscargo"
+        RSYNC_OPTS='-az --delete --exclude=.git --exclude=db-data --exclude=backups'
+
+        mkdir -p "$PROJECT_DIR"
+        rsync $RSYNC_OPTS ./ "$PROJECT_DIR/"
+
+    # 4) Backup y despliegue (local)
+    - name: 🚀 Backup + rebuild + up
+      run: |
+        set -euo pipefail
+
+        PROJECT_DIR="/mnt/Data/syscargo"
+        BACKUP_ROOT="/mnt/Data/sysca-backups"
+
+        echo "🔍 Verificando directorio"; ls -la "$PROJECT_DIR"
+
+        # ---------- BACKUP ----------
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        BACKUP_DIR="$BACKUP_ROOT/$TIMESTAMP"
+        sudo mkdir -p "$BACKUP_DIR"
+
+        sudo rsync -a --delete --exclude 'db-data' --exclude 'backups' \
+            "$PROJECT_DIR/" "$BACKUP_DIR/"
+
+        # Limpiar backups > 7 días
+        sudo find "$BACKUP_ROOT" -maxdepth 1 -type d -mtime +7 -exec rm -rf {} \;
+
+        # ---------- DEPLOY ----------
+        cd "$PROJECT_DIR"
+
+        docker-compose down -v
+        docker system prune -f
+        docker-compose up -d --build
+
+        echo "✅ Despliegue completado"
+
+    - name: 📣 Notificar resultado
+      if: always()  # Se ejecuta siempre (éxito o fallo)
+      env:
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT:  ${{ secrets.TELEGRAM_CHAT_ID }}
+        COMMIT_URL: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+        WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        COMMIT_AUTHOR_NAME: ${{ github.event.head_commit.author.name }}
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        BRANCH_NAME: ${{ github.ref_name }}
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          EMOJI="✅"
+          TEXTO_ESTADO="exitosa"
+        else
+          EMOJI="❌"
+          TEXTO_ESTADO="fallida"
+        fi
+  
+        MSG="$EMOJI *Despliegue $TEXTO_ESTADO - Staging*
+        • *Repo:* ${{ github.repository }}
+        • *Autor:* $COMMIT_AUTHOR_NAME
+        • *Rama:* $BRANCH_NAME
+        • *Commit:* ${GITHUB_SHA:0:8}
+        • *Mensaje:* $COMMIT_MESSAGE
+        • *Ejecución:* [Ver detalles]($WORKFLOW_URL)
+        • *Hora:* $(date -u +'%H:%M:%S UTC')
+  
+        _Estado del pipeline: ${{ job.status }}_"
+  
+        curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+          -d chat_id="$TELEGRAM_CHAT" \
+          --data-urlencode "text=$MSG" \
+          -d parse_mode="Markdown" > /dev/null
+
+# #   ###########################################################################
+# #   # 2) ROLLBACK (solo si deploy falla)                                      #
+# #   ###########################################################################
+# #   rollback:
+# #     needs: deploy
+# #     if: ${{ needs.deploy.result == 'failure' }}
+# #     runs-on: self-hosted
+# #     environment: staging
+
+# #     steps:
+# #     - name: 📱 Notificar inicio de rollback a Telegram
+# #       uses: appleboy/telegram-action@v1.0.2
+# #       with:
+# #         to:    ${{ secrets.TELEGRAM_CHAT_ID }}
+# #         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+# #         format: html
+# #         message: |
+# #           🔄 <b>Inicio de rollback</b>
+# #           • Repositorio: <code>${{ github.repository }}</code>
+# #           • Rama: <code>${{ github.ref_name }}</code>
+# #           • Commit: <code>${{ github.sha }}</code>
+# #           • Autor: <code>${{ github.actor }}</code>
+# #           • Fecha: <code>${{ github.event.head_commit.timestamp }}</code>
+# #           • <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Ver pipeline</a>
+
+# #     - name: 🔄 Restaurar versión anterior
+# #       uses: appleboy/ssh-action@v1.2.2
+# #       with:
+# #         host:     ${{ secrets.SSH_HOST }}
+# #         username: ${{ secrets.SSH_USER }}
+# #         key:      ${{ secrets.SSH_PRIVATE_KEY }}
+# #         port:     ${{ secrets.SSH_PORT }}
+# #         script_stop: true
+# #         script: |
+# #           set -euo pipefail
+# #           PROJECT_DIR="/mnt/Data/syscargo"
+# #           BACKUP_ROOT="/mnt/Data/sysca-backups"
+
+# #           echo "🔍 Buscando último backup..."
+# #           LATEST_BACKUP=$(ls -td "$BACKUP_ROOT"/* | head -1 || true)
+
+# #           if [[ -z "$LATEST_BACKUP" ]]; then
+# #             echo "❌ No hay backups disponibles"
+# #             exit 1
+# #           fi
+
+# #           echo "📦 Restaurando desde $LATEST_BACKUP"
+
+# #           # Limpia proyecto actual excepto volúmenes persistentes
+# #           find "$PROJECT_DIR" -mindepth 1 -maxdepth 1 \
+# #             ! -name 'db-data' \
+# #             -exec rm -rf {} \;
+
+# #           # Copia desde backup excluyendo nginx/data* y letsencrypt*
+# #           find "$LATEST_BACKUP" -mindepth 1 -maxdepth 1 \
+# #             ! -name 'db-data' \
+# #             -exec cp -r {} "$PROJECT_DIR/" \;
+
+# #           echo "🔄 Reiniciando servicios..."
+# #           cd "$PROJECT_DIR"
+# #           docker compose down -v --rmi all || true
+# #           docker compose up -d --build
+# #           echo "✅ Rollback completado"
+
+# #     - name: 📱 Notificar fallo de rollback a Telegram
+# #       if: failure()
+# #       uses: appleboy/telegram-action@v1.0.2
+# #       with:
+# #         to:    ${{ secrets.TELEGRAM_CHAT_ID }}
+# #         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+# #         format: html
+# #         message: |
+# #           ❌ <b>Fallo en el rollback</b>
+# #           • Repositorio: <code>${{ github.repository }}</code>
+# #           • Rama: <code>${{ github.ref_name }}</code>
+# #           • Commit: <code>${{ github.sha }}</code>
+# #           • Autor: <code>${{ github.actor }}</code>
+# #           • Fecha: <code>${{ github.event.head_commit.timestamp }}</code>
+# #           • <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Ver pipeline</a>

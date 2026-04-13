@@ -1,0 +1,460 @@
+#  Direct Selective Sync dev → staging
+name: Direct Selective Sync dev → staging
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  direct-sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout branches
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: main-repo
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Get changed files
+        id: changed-files
+        working-directory: ./main-repo
+        run: |
+          git fetch origin staging
+          CHANGED_RAW=$(git diff --name-status origin/staging..origin/dev -- .)
+
+          ADDED_MODIFIED=$(echo "$CHANGED_RAW" | grep -E '^[AM]\s' | cut -f2-)
+          DELETED=$(echo "$CHANGED_RAW" | grep -E '^D\s' | cut -f2-)
+
+          # FILTER_REGEX='Dockerfile$|\.dockerignore$|\.gitignore$|docker-compose(\..*)?\.yml$|\.env.*$|nuxt.config.ts$'
+          FILTER_REGEX='Dockerfile$|\.dockerignore$|\.gitignore$|docker-compose(\..*)?\.yml$|\.env.*$|nuxt.config.ts$|^tms-backend/src/main\.ts$|^tms-backend/ormconfig\.ts$|^tms-backend/typeorm\.config\.ts$|^tms-front-admin/src/axios/axios\.ts$|^\.github/workflows/predeploy\.yml$'
+          SAFE_AM=$(echo "$ADDED_MODIFIED" | grep -v -E "$FILTER_REGEX" || true)
+          SAFE_D=$(echo "$DELETED" | grep -v -E "$FILTER_REGEX" || true)
+
+          echo "files_to_sync=$(echo "$SAFE_AM" | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          echo "files_to_delete=$(echo "$SAFE_D" | tr '\n' ' ')" >> $GITHUB_OUTPUT
+
+          {
+            echo "CHANGES_AM<<EOF"
+            echo "$SAFE_AM" | head -n 100 | sed 's/^/• /'
+            echo "EOF"
+            echo "CHANGES_D<<EOF"
+            echo "$SAFE_D" | head -n 100 | sed 's/^/🗑️ /'
+            echo "EOF"
+          } >> $GITHUB_ENV
+
+          BLOCKED_AM=$(echo "$ADDED_MODIFIED" | grep -E "$FILTER_REGEX" || true)
+          BLOCKED_D=$(echo "$DELETED" | grep -E "$FILTER_REGEX" || true)
+
+          {
+            echo "BLOCKED_CHANGES<<EOF"
+            echo "$BLOCKED_AM" | sed 's/^/🚫 /'
+            echo "$BLOCKED_D" | sed 's/^/🚫 /'
+            echo "EOF"
+          } >> $GITHUB_ENV
+
+      - name: Selective copy and delete
+        if: steps.changed-files.outputs.files_to_sync != '' || steps.changed-files.outputs.files_to_delete != ''
+        working-directory: ./main-repo
+        run: |
+          git fetch origin
+          git checkout -B staging origin/staging
+
+          # FILTER_REGEX='Dockerfile$|\.dockerignore$|\.gitignore$|docker-compose(\..*)?\.yml$|\.env.*$|nuxt.config.ts$'
+          FILTER_REGEX='Dockerfile$|\.dockerignore$|\.gitignore$|docker-compose(\..*)?\.yml$|\.env.*$|nuxt.config.ts$|^tms-backend/src/main\.ts$|^tms-backend/ormconfig\.ts$|^tms-backend/typeorm\.config\.ts$|^tms-front-admin/src/axios/axios\.ts$|^\.github/workflows/predeploy\.yml$'
+
+          BLOCKED=$(echo "${{ steps.changed-files.outputs.files_to_sync }}" | tr ' ' '\n' | grep -E "$FILTER_REGEX" || true)
+
+          if [ -n "$BLOCKED" ]; then
+            echo "⛔ Aviso: Archivos prohibidos detectados, serán ignorados:"
+            echo "$BLOCKED"
+            FILTERED_CHANGES=$(echo "${{ steps.changed-files.outputs.files_to_sync }}" | tr ' ' '\n' | grep -v -F -f <(echo "$BLOCKED") | tr '\n' ' ')
+          else
+            FILTERED_CHANGES="${{ steps.changed-files.outputs.files_to_sync }}"
+          fi
+
+          if [ -n "$FILTERED_CHANGES" ]; then
+            git checkout dev -- $FILTERED_CHANGES
+          else
+            echo "🔕 No hay archivos seguros para copiar."
+          fi
+
+          if [ -n "${{ steps.changed-files.outputs.files_to_delete }}" ]; then
+            echo "🗑️ Eliminando archivos:"
+            echo "${{ steps.changed-files.outputs.files_to_delete }}" | tr ' ' '\n'
+            echo "${{ steps.changed-files.outputs.files_to_delete }}" | tr ' ' '\n' | xargs -I{} git rm -f --ignore-unmatch {}
+          fi
+
+          git add -u
+          if ! git diff --cached --quiet; then
+            git commit -m "🔄 Sync directo: Archivos modificados y eliminados desde dev"
+            git push origin staging
+          else
+            echo "✅ No hay cambios para commitear."
+          fi
+
+      - name: Trigger staging workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: staging-deploy
+          client-payload: '{"ref":"staging"}'
+
+      - name: Notification
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          COMMIT_URL: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+        run: |
+          MSG="🔄 *Sync Directo Completado*
+          *Repo:* \`${{ github.repository }}\`"
+
+          if [ -n "${{ env.CHANGES_AM }}" ]; then
+            MSG="$MSG
+
+          📁 *Agregados / Modificados:*
+          ${{ env.CHANGES_AM }}"
+          fi
+
+          if [ -n "${{ env.CHANGES_D }}" ]; then
+            MSG="$MSG
+
+          🗑️ *Eliminados:*
+          ${{ env.CHANGES_D }}"
+          fi
+
+          if [ -n "${{ env.BLOCKED_CHANGES }}" ]; then
+            MSG="$MSG
+
+          🚫 *Ignorados por filtrado:*
+          ${{ env.BLOCKED_CHANGES }}"
+          fi
+
+          MSG="$MSG
+
+          🔗 [Ver detalles del commit](${{ env.COMMIT_URL }})"
+
+          if [ ${#MSG} -gt 4000 ]; then
+            MSG="🔄 *Sync Directo Completado*
+          *Repo:* \`${{ github.repository }}\`
+
+          ℹ️ El detalle excede el límite de Telegram.
+          🔗 [Ver detalles del commit](${{ env.COMMIT_URL }})"
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT" \
+            -d text="$MSG" \
+            -d parse_mode="Markdown" > /dev/null
+
+
+
+
+# -----------------------------------------------------------
+# FILTRO DE ARCHIVOS PARA SYNC DEV → STAGING
+# -----------------------------------------------------------
+# Sintaxis general: grep -v -E 'patrón1|patrón2|...'
+# -----------------------------------------------------------
+# PATRONES DE EXCLUSIÓN:
+#
+# 1. Dockerfile$ 
+#    - Excluye exactamente 'Dockerfile' en cualquier directorio
+#    - Ej: /Dockerfile, /backend/Dockerfile
+#
+# 2. \.dockerignore$
+#    - Excluye archivos '.dockerignore' en cualquier ubicación
+#    - Ej: /.dockerignore, /config/.dockerignore
+#
+# 3. \.gitignore$
+#    - Excluye archivos '.gitignore' en cualquier ubicación
+#    - Ej: /.gitignore, /frontend/.gitignore
+#
+# 4. docker-compose(\..*)?\.yml$
+#    - Excluye:
+#      a) 'docker-compose.yml' exacto
+#      b) 'docker-compose.cualquiercosa.yml'
+#    - Ej: /docker-compose.yml, /deploy/docker-compose.prod.yml
+#
+# 5. \.env.*$
+#    - Excluye cualquier archivo que comience con '.env'
+#    - Ej: /.env, /.env.staging, /config/.env.prod
+#
+# 6. nuxt.config.ts$
+#    - Excluye 'nuxt.config.ts' en CUALQUIER directorio
+#    - Ej: /nuxt.config.ts, /frontend/nuxt.config.ts
+#
+# 7. .*/.github/workflows/.*
+#    - Excluye TODO el contenido del directorio .github/workflows/
+#    - Ej: 
+#      - /.github/workflows/deploy.yml
+#      - /.github/workflows/test/staging.yml
+# -----------------------------------------------------------
+# NOTAS IMPORTANTES:
+#
+# - El símbolo '$' al final fuerza coincidencia con nombre completo
+# - '.*' significa "cualquier caracter (0 o más veces)"
+# - '\' se usa para escapar caracteres especiales (ej: puntos)
+# - Los patrones son CASE SENSITIVE
+# -----------------------------------------------------------
+# CÓMO AÑADIR NUEVAS EXCLUSIONES:
+#
+# 1. Para excluir un ARCHIVO específico en cualquier ubicación:
+#    - Ej: 'nombrearchivo\.ext$' → 'config\.json$'
+#
+# 2. Para excluir una EXTENSIÓN:
+#    - Ej: '\.log$' → todos los archivos .log
+#
+# 3. Para excluir una CARPETA completa:
+#    - Ej: '.*/carpeta/.*' → todo su contenido
+#
+# 4. Para excluir un ARCHIVO en una RUTA ESPECÍFICA:
+#    - Ej: '^config/prod/.*\.json$' → todos .json en config/prod/
+#  **Recuerda aplicar los filtros tanto en verificacion como en revalidacion
+# -----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 🔄 Direct Selective Sync dev → staging
+# name: Direct Selective Sync dev → staging
+
+# on:
+#   push:
+#     branches:
+#       - dev
+
+# jobs:
+#   direct-sync:
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: write
+
+#     steps:
+#       - name: Checkout branches
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+#           path: main-repo
+
+#       - name: Configure Git
+#         run: |
+#           git config --global user.name "GitHub Actions"
+#           git config --global user.email "actions@github.com"
+
+#       - name: Get changed files
+#         id: changed-files
+#         working-directory: ./main-repo
+#         run: |
+#           git fetch origin staging
+#           CHANGED_RAW=$(git diff --name-status origin/staging..origin/dev -- .)
+
+#           ADDED_MODIFIED=$(echo "$CHANGED_RAW" | grep -E '^[AM]\s' | cut -f2-)
+#           DELETED=$(echo "$CHANGED_RAW" | grep -E '^D\s' | cut -f2-)
+
+#           FILTER_REGEX='Dockerfile$|\.dockerignore$|\.gitignore$|docker-compose(\..*)?\.yml$|\.env.*$|predeploy.yml$|deploy.yml$'
+
+#           SAFE_AM=$(echo "$ADDED_MODIFIED" | grep -v -E "$FILTER_REGEX" || true)
+#           SAFE_D=$(echo "$DELETED" | grep -v -E "$FILTER_REGEX" || true)
+
+#           echo "files_to_sync=$(echo "$SAFE_AM" | tr '\n' ' ')" >> $GITHUB_OUTPUT
+#           echo "files_to_delete=$(echo "$SAFE_D" | tr '\n' ' ')" >> $GITHUB_OUTPUT
+
+#           {
+#             echo "CHANGES_AM<<EOF"
+#             echo "$SAFE_AM" | head -n 100 | sed 's/^/• /'
+#             echo "EOF"
+#             echo "CHANGES_D<<EOF"
+#             echo "$SAFE_D" | head -n 100 | sed 's/^/🗑️ /'
+#             echo "EOF"
+#           } >> $GITHUB_ENV
+
+#           BLOCKED_AM=$(echo "$ADDED_MODIFIED" | grep -E "$FILTER_REGEX" || true)
+#           BLOCKED_D=$(echo "$DELETED" | grep -E "$FILTER_REGEX" || true)
+
+#           {
+#             echo "BLOCKED_CHANGES<<EOF"
+#             echo "$BLOCKED_AM" | sed 's/^/🚫 /'
+#             echo "$BLOCKED_D" | sed 's/^/🚫 /'
+#             echo "EOF"
+#           } >> $GITHUB_ENV
+
+#       - name: Selective copy and delete
+#         if: steps.changed-files.outputs.files_to_sync != '' || steps.changed-files.outputs.files_to_delete != ''
+#         working-directory: ./main-repo
+#         run: |
+#           git fetch origin
+#           git checkout -B staging origin/staging
+
+#           FILTER_REGEX='Dockerfile$|\.dockerignore$|\.gitignore$|docker-compose(\..*)?\.yml$|\.env.*$|predeploy.yml$|deploy.yml$'
+#           BLOCKED=$(echo "${{ steps.changed-files.outputs.files_to_sync }}" | tr ' ' '\n' | grep -E "$FILTER_REGEX" || true)
+
+#           if [ -n "$BLOCKED" ]; then
+#             echo "⛔ Aviso: Archivos prohibidos detectados, serán ignorados:"
+#             echo "$BLOCKED"
+#             FILTERED_CHANGES=$(echo "${{ steps.changed-files.outputs.files_to_sync }}" | tr ' ' '\n' | grep -v -F -f <(echo "$BLOCKED") | tr '\n' ' ')
+#           else
+#             FILTERED_CHANGES="${{ steps.changed-files.outputs.files_to_sync }}"
+#           fi
+
+#           if [ -n "$FILTERED_CHANGES" ]; then
+#             git checkout dev -- $FILTERED_CHANGES
+#           else
+#             echo "🔕 No hay archivos seguros para copiar."
+#           fi
+
+#           if [ -n "${{ steps.changed-files.outputs.files_to_delete }}" ]; then
+#             echo "🗑️ Eliminando archivos:"
+#             echo "${{ steps.changed-files.outputs.files_to_delete }}" | tr ' ' '\n'
+#             echo "${{ steps.changed-files.outputs.files_to_delete }}" | tr ' ' '\n' | xargs -I{} git rm -f --ignore-unmatch {}
+#           fi
+
+#           git add -u
+#           if ! git diff --cached --quiet; then
+#             git commit -m "🔄 Sync directo: Archivos modificados y eliminados desde dev [skip ci]"
+#             git push origin staging
+#           else
+#             echo "✅ No hay cambios para commitear."
+#           fi
+
+#       - name: Notification
+#         env:
+#           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+#           TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+#           REPO_URL: https://github.com/${{ github.repository }}
+#           COMMIT_URL: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+#         run: |
+#           if [ "${{ steps.changed-files.outputs.files_to_sync }}" != "" ] || [ "${{ steps.changed-files.outputs.files_to_delete }}" != "" ]; then
+#             MSG="🔄 *Sync Directo Completado*
+#             📦 *Repo:* ${{ github.repository }}"
+
+#             if [ -n "${{ env.CHANGES_AM }}" ]; then
+#               MSG="$MSG
+
+#             📁 *Agregados / Modificados:*
+#             ${{ env.CHANGES_AM }}"
+#             fi
+
+#             if [ -n "${{ env.CHANGES_D }}" ]; then
+#               MSG="$MSG
+
+#            🗑️ *Eliminados:*
+#             ${{ env.CHANGES_D }}"
+#             fi
+
+#             MSG="$MSG
+            
+#            🚫 *Ignorados por filtrado:*"
+#            CLEAN_BLOCKED=$(echo "${{ env.BLOCKED_CHANGES }}" | sed '/^$/d')
+#             if [ -n "$CLEAN_BLOCKED" ]; then
+#               MSG="$MSG
+#            $CLEAN_BLOCKED"
+#             else
+#               MSG="$MSG
+#           _No se encontraron archivos ignorados por filtrado._"
+#             fi
+
+#             MSG="$MSG
+
+#           🔗 [Ver detalles del commit]($COMMIT_URL)"
+#           else
+#             MSG="✅ *Sync Verificado*
+#           📦 *Repo:* ${{ github.repository }}
+#           📄 *Estado:* No hubo cambios relevantes
+
+#           🔗 [Ver último commit]($COMMIT_URL)"
+#           fi
+
+#           # Si el mensaje excede el límite de caracteres permitido por Telegram (4096)
+#           if [ ${#MSG} -gt 4000 ]; then
+#             MSG="🔄 *Sync Directo Completado*
+#           📦 *Repo:* ${{ github.repository }}
+
+#           ℹ️ El detalle excede el límite de Telegram.
+#           🔗 [Ver detalles del commit]($COMMIT_URL)"
+#           fi
+
+#           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+#             -d chat_id="$TELEGRAM_CHAT" \
+#             --data-urlencode "text=$MSG" \
+#             -d parse_mode="Markdown" > /dev/null
+
+# -----------------------------------------------------------
+# FILTRO DE ARCHIVOS PARA SYNC DEV → STAGING
+# -----------------------------------------------------------
+# Sintaxis general: grep -v -E 'patrón1|patrón2|...'
+# -----------------------------------------------------------
+# PATRONES DE EXCLUSIÓN:
+#
+# 1. Dockerfile$ 
+#    - Excluye exactamente 'Dockerfile' en cualquier directorio
+#    - Ej: /Dockerfile, /backend/Dockerfile
+#
+# 2. \.dockerignore$
+#    - Excluye archivos '.dockerignore' en cualquier ubicación
+#    - Ej: /.dockerignore, /config/.dockerignore
+#
+# 3. \.gitignore$
+#    - Excluye archivos '.gitignore' en cualquier ubicación
+#    - Ej: /.gitignore, /frontend/.gitignore
+#
+# 4. docker-compose(\..*)?\.yml$
+#    - Excluye:
+#      a) 'docker-compose.yml' exacto
+#      b) 'docker-compose.cualquiercosa.yml'
+#    - Ej: /docker-compose.yml, /deploy/docker-compose.prod.yml
+#
+# 5. \.env.*$
+#    - Excluye cualquier archivo que comience con '.env'
+#    - Ej: /.env, /.env.staging, /config/.env.prod
+#
+# 6. nuxt.config.ts$
+#    - Excluye 'nuxt.config.ts' en CUALQUIER directorio
+#    - Ej: /nuxt.config.ts, /frontend/nuxt.config.ts
+#
+# 7. .*/.github/workflows/.*
+#    - Excluye TODO el contenido del directorio .github/workflows/
+#    - Ej: 
+#      - /.github/workflows/deploy.yml
+#      - /.github/workflows/test/staging.yml
+# -----------------------------------------------------------
+# NOTAS IMPORTANTES:
+#
+# - El símbolo '$' al final fuerza coincidencia con nombre completo
+# - '.*' significa "cualquier caracter (0 o más veces)"
+# - '\' se usa para escapar caracteres especiales (ej: puntos)
+# - Los patrones son CASE SENSITIVE
+# -----------------------------------------------------------
+# CÓMO AÑADIR NUEVAS EXCLUSIONES:
+#
+# 1. Para excluir un ARCHIVO específico en cualquier ubicación:
+#    - Ej: 'nombrearchivo\.ext$' → 'config\.json$'
+#
+# 2. Para excluir una EXTENSIÓN:
+#    - Ej: '\.log$' → todos los archivos .log
+#
+# 3. Para excluir una CARPETA completa:
+#    - Ej: '.*/carpeta/.*' → todo su contenido
+#
+# 4. Para excluir un ARCHIVO en una RUTA ESPECÍFICA:
+#    - Ej: '^config/prod/.*\.json$' → todos .json en config/prod/
+#  **Recuerda aplicar los filtros tanto en verificacion como en revalidacion
+# -----------------------------------------------------------

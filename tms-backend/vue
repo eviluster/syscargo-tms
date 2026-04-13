@@ -1,0 +1,233 @@
+// src/composables/useSearch.ts
+import { ref } from 'vue';
+import { SearchInput, FieldSelection, JoinCondition, FilterCondition, SortCondition } from '@/types/search.types';
+
+export const useSearch = () => {
+  const search = async (input: SearchInput) => {
+    try {
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Search request failed');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Search error:', error);
+      throw error;
+    }
+  };
+
+  return { search };
+};
+
+// src/components/GenericSearch.vue
+<template>
+  <div class="generic-search">
+    <div class="search-form">
+      <!-- Campos principales -->
+      <div class="field-selection">
+        <h3>Campos a Seleccionar</h3>
+        <div v-for="(field, index) in selectedFields" :key="index">
+          <input v-model="field.name" placeholder="Nombre del campo" />
+          <input v-model="field.alias" placeholder="Alias (opcional)" />
+          <button @click="removeField(index)">Eliminar</button>
+        </div>
+        <button @click="addField">Agregar Campo</button>
+      </div>
+
+      <!-- Joins -->
+      <div class="join-selection">
+        <h3>Relaciones</h3>
+        <div v-for="(join, index) in joins" :key="index">
+          <input v-model="join.table" placeholder="Tabla" />
+          <input v-model="join.alias" placeholder="Alias" />
+          <select v-model="join.type">
+            <option value="INNER">INNER</option>
+            <option value="LEFT">LEFT</option>
+            <option value="RIGHT">RIGHT</option>
+          </select>
+          <input v-model="join.condition" placeholder="Condición" />
+          <button @click="removeJoin(index)">Eliminar</button>
+        </div>
+        <button @click="addJoin">Agregar Relación</button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filter-selection">
+        <h3>Filtros</h3>
+        <div v-for="(filter, index) in filters" :key="index">
+          <input v-model="filter.field" placeholder="Campo" />
+          <select v-model="filter.operator">
+            <option value="EQ">=</option>
+            <option value="NE">!=</option>
+            <option value="GT">></option>
+            <option value="LT"><</option>
+            <option value="GTE">>=</option>
+            <option value="LTE"><=</option>
+            <option value="LIKE">LIKE</option>
+            <option value="IN">IN</option>
+            <option value="NOT_IN">NOT IN</option>
+            <option value="IS_NULL">IS NULL</option>
+            <option value="IS_NOT_NULL">IS NOT NULL</option>
+          </select>
+          <input v-model="filter.value" placeholder="Valor" />
+          <select v-model="filter.logicalOperator">
+            <option value="AND">AND</option>
+            <option value="OR">OR</option>
+          </select>
+          <button @click="removeFilter(index)">Eliminar</button>
+        </div>
+        <button @click="addFilter">Agregar Filtro</button>
+      </div>
+
+      <!-- Ordenamiento -->
+      <div class="sort-selection">
+        <h3>Ordenamiento</h3>
+        <div v-for="(sort, index) in sortConditions" :key="index">
+          <input v-model="sort.field" placeholder="Campo" />
+          <select v-model="sort.direction">
+            <option value="ASC">Ascendente</option>
+            <option value="DESC">Descendente</option>
+          </select>
+          <button @click="removeSort(index)">Eliminar</button>
+        </div>
+        <button @click="addSort">Agregar Ordenamiento</button>
+      </div>
+
+      <!-- Paginación -->
+      <div class="pagination">
+        <input type="number" v-model="skip" placeholder="Saltar" />
+        <input type="number" v-model="take" placeholder="Tomar" />
+      </div>
+
+      <button @click="executeSearch">Buscar</button>
+    </div>
+
+    <!-- Resultados -->
+    <div class="results" v-if="results.length">
+      <table>
+        <thead>
+          <tr>
+            <th v-for="field in selectedFields" :key="field.name">
+              {{ field.alias || field.name }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item, index) in results" :key="index">
+            <td v-for="field in selectedFields" :key="field.name">
+              {{ item[field.alias || field.name] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useSearch } from '@/composables/useSearch';
+import { SearchInput, FieldSelection, JoinCondition, FilterCondition, SortCondition } from '@/types/search.types';
+
+const { search } = useSearch();
+const results = ref([]);
+
+// Estado del formulario
+const selectedFields = ref<FieldSelection[]>([{ name: 'id' }]);
+const joins = ref<JoinCondition[]>([]);
+const filters = ref<FilterCondition[]>([]);
+const sortConditions = ref<SortCondition[]>([]);
+const skip = ref<number>();
+const take = ref<number>();
+
+// Métodos para manipular el estado
+const addField = () => selectedFields.value.push({ name: '' });
+const removeField = (index: number) => selectedFields.value.splice(index, 1);
+
+const addJoin = () => joins.value.push({
+  table: '',
+  alias: '',
+  type: 'LEFT',
+  condition: ''
+});
+const removeJoin = (index: number) => joins.value.splice(index, 1);
+
+const addFilter = () => filters.value.push({
+  field: '',
+  operator: 'EQ',
+  value: '',
+  logicalOperator: 'AND'
+});
+const removeFilter = (index: number) => filters.value.splice(index, 1);
+
+const addSort = () => sortConditions.value.push({
+  field: '',
+  direction: 'ASC'
+});
+const removeSort = (index: number) => sortConditions.value.splice(index, 1);
+
+// Ejecutar búsqueda
+const executeSearch = async () => {
+  const input: SearchInput = {
+    mainTable: 'users', // Tabla por defecto
+    mainAlias: 'main',
+    fields: selectedFields.value,
+    joins: joins.value,
+    filters: filters.value,
+    sort: sortConditions.value,
+    skip: skip.value,
+    take: take.value
+  };
+
+  results.value = await search(input);
+};
+</script>
+
+<style scoped>
+.generic-search {
+  padding: 20px;
+}
+
+.search-form {
+  display: grid;
+  gap: 20px;
+}
+
+.field-selection,
+.join-selection,
+.filter-selection,
+.sort-selection,
+.pagination {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+button {
+  margin: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f5f5f5;
+}
+</style>

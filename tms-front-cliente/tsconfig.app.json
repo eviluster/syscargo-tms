@@ -1,0 +1,26 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  // "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "include": ["src/**/*", "src/shims-vue.d.ts", "env.d.ts"],
+  "exclude": [
+    "src/**/*.d.ts" // evita que recoja defs ya existentes
+  ],
+  "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "composite": true, // necesario para referencias
+    "declaration": true, // genera los .d.ts
+    "declarationDir": "dist/types",
+    "emitDeclarationOnly": true, // sólo .d.ts, el JS lo procesa Vite
+    "outDir": "dist",
+    "strict": true,
+    "jsx": "preserve",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "esnext",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+  //Test de la configuración
+}

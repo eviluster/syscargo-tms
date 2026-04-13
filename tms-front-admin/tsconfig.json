@@ -1,0 +1,31 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": [
+    "vite.config.*",
+    "vitest.config.*",
+    "cypress.config.*",
+    "playwright.config.*",
+    "env.d.ts",
+    "src"
+  ],
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    "types",
+    "src/**/*.vue.d.ts",
+    "src/**/*.d.ts"
+  ],
+
+  "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "lib": ["es2017"],
+    "ignoreDeprecations": "5.0",
+    "noImplicitAny": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["node"]
+  }
+}
