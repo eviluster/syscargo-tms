@@ -65,8 +65,12 @@
       <!--end::Input group-->
 
       <!--begin::Forgot password link-->
-      <div class="text-end mb-5">
-        <span class="text-muted fs-7">¿Olvidaste tu contraseña?</span>
+      <div class="text-center mb-5">
+        <router-link
+          :to="{ name: 'password-reset' }"
+          class="text-muted fs-7"
+          >¿Olvidaste tu contraseña?</router-link
+        >
       </div>
       <!--end::Forgot password link-->
 
@@ -78,9 +82,9 @@
           type="submit"
           ref="submitButton"
           id="kt_sign_in_submit"
-          class="btn btn-lg btn-primary w-100 mb-2"
+          class="btn btn-lg btn-primary w-100 mb-5"
         >
-          <span class="indicator-label"> Iniciar </span>
+          <span class="indicator-label">Iniciar sesión</span>
 
           <span class="indicator-progress">
             Por favor espere...
