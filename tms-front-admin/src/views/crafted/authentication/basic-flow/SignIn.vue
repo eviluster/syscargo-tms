@@ -64,6 +64,12 @@
       </div>
       <!--end::Input group-->
 
+      <!--begin::Forgot password link-->
+      <div class="text-end mb-5">
+        <span class="text-muted fs-7">¿Olvidaste tu contraseña?</span>
+      </div>
+      <!--end::Forgot password link-->
+
       <!--begin::Actions-->
       <div class="text-center">
         <!--begin::Submit button-->
