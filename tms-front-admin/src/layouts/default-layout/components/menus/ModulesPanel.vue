@@ -8,10 +8,17 @@ export default defineComponent({
   setup() {
     const store = useAppStore();
     const modulos = ref([
-      // { name: "Terrestre", path: "/comercializacion/reservar" },
-      { name: "Aereo", path: "/dashboard" },
-      // { name: "Marítimo", path: "/comercializacion/reservar" },
-      // { name: "Ferroviario", path: "/comercializacion/reservar" },
+      {
+        name: "Aéreo",
+        to: { path: "/comercializacion/peticion/addpeticion", query: { via: "aerea" } },
+      },
+      {
+        name: "Terrestre",
+        to: {
+          path: "/comercializacion/peticion/addpeticion",
+          query: { via: "terrestre" },
+        },
+      },
     ]);
 
     const setModule = (name) => {
@@ -41,7 +48,7 @@ export default defineComponent({
       <div class="row row-cols-3">
         <div class="col" v-for="modul in modulos" :key="modul.name">
           <router-link
-            :to="modul.path"
+            :to="modul.to"
             class="d-flex flex-column mb-5 text-center"
             @click="setModule(modul.name)"
           >

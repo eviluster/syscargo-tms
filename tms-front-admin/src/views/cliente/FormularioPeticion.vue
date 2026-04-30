@@ -47,6 +47,18 @@
 
     <div class="row">
       <div class="col-md-6 mb-3">
+        <label class="form-label required">Modalidad de transporte</label>
+        <select v-model="form.via" class="form-select" required>
+          <option value="">Seleccione modalidad</option>
+          <option value="aerea">Aérea</option>
+          <option value="terrestre">Terrestre</option>
+          <option value="maritima">Marítima</option>
+          <option value="ferroviaria">Ferroviaria</option>
+          <option value="multimodal">Multimodal</option>
+        </select>
+      </div>
+
+      <div class="col-md-6 mb-3">
         <label class="form-label required">Origen</label>
         <select v-model="form.origen" class="form-select" required>
           <option value="">Seleccione un origen</option>
@@ -57,11 +69,47 @@
       </div>
 
       <div class="col-md-6 mb-3">
+        <label class="form-label required">Dirección completa de origen</label>
+        <textarea
+          v-model="form.origenDireccion"
+          class="form-control"
+          rows="2"
+          placeholder="Calle, número, entre calles, municipio, provincia"
+          required
+        />
+      </div>
+
+      <div class="col-md-6 mb-3">
         <label class="form-label required">Destino</label>
         <select v-model="form.destino" class="form-select" required>
           <option value="">Seleccione un destino</option>
           <option v-for="d in destinos" :key="d.id" :value="d.name">
             {{ d.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label required">Dirección completa de destino</label>
+        <textarea
+          v-model="form.destinoDireccion"
+          class="form-control"
+          rows="2"
+          placeholder="Calle, número, entre calles, municipio, provincia"
+          required
+        />
+      </div>
+
+      <div class="col-md-12 mb-3" v-if="form.via === 'terrestre'">
+        <label class="form-label required">Transportista disponible</label>
+        <select v-model="form.transportistaId" class="form-select" required>
+          <option value="">Seleccione un transportista</option>
+          <option
+            v-for="transportista in transportistasDisponibles"
+            :key="transportista.id"
+            :value="String(transportista.id)"
+          >
+            {{ transportista.nombre }} - {{ transportista.tipoServicio }}
           </option>
         </select>
       </div>
@@ -86,18 +134,29 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import Swal from "sweetalert2";
 import { useOrigenStore } from "@/stores/origen";
 import { useDestinoStore } from "@/stores/destino";
+import { useTransportistasStore } from "@/stores/transportistas";
 import api from "@/services/api";
 
 const router = useRouter();
+const route = useRoute();
 const origenStore = useOrigenStore();
 const destinoStore = useDestinoStore();
+const transportistasStore = useTransportistasStore();
 
 const origenes = computed(() => origenStore.origenes || []);
 const destinos = computed(() => destinoStore.destinoes || []);
+const transportistasDisponibles = computed(() =>
+  (transportistasStore.getTransportistas || []).filter(
+    (t) =>
+      t.estado?.toLowerCase() === "activo" &&
+      (t.tipoServicio?.toLowerCase().includes("carga") ||
+        t.tipoServicio?.toLowerCase().includes("terrestre")),
+  ),
+);
 
 const submitting = ref(false);
 const form = reactive({
@@ -106,8 +165,12 @@ const form = reactive({
   peso: null,
   volumen: null,
   origen: "",
+  origenDireccion: "",
   destino: "",
+  destinoDireccion: "",
   tipoCarga: "",
+  via: "",
+  transportistaId: "",
 });
 
 onMounted(async () => {
@@ -121,6 +184,12 @@ onMounted(async () => {
     if (typeof destinoStore.fetchDestinos === "function")
       await destinoStore.fetchDestinos();
   }
+
+  const viaFromQuery = String(route.query.via || "").toLowerCase();
+  const viasPermitidas = ["aerea", "terrestre", "maritima", "ferroviaria", "multimodal"];
+  if (viasPermitidas.includes(viaFromQuery)) {
+    form.via = viaFromQuery;
+  }
 });
 
 /* Validación cliente mínima */
@@ -130,13 +199,24 @@ function validate() {
     !form.nombreCarga ||
     !form.peso ||
     !form.origen ||
+    !form.origenDireccion ||
     !form.destino ||
-    !form.tipoCarga
+    !form.destinoDireccion ||
+    !form.tipoCarga ||
+    !form.via
   ) {
     Swal.fire({
       icon: "warning",
       title: "Validación",
       text: "Completa los campos requeridos",
+    });
+    return false;
+  }
+  if (form.via === "terrestre" && !form.transportistaId) {
+    Swal.fire({
+      icon: "warning",
+      title: "Validación",
+      text: "Debe seleccionar un transportista para la modalidad terrestre",
     });
     return false;
   }
@@ -153,8 +233,19 @@ async function submit() {
     peso: form.peso,
     volumen: form.volumen,
     origen: form.origen,
+    origenDireccion: form.origenDireccion,
     destino: form.destino,
+    destinoDireccion: form.destinoDireccion,
     tipoCarga: form.tipoCarga,
+    via: form.via,
+    transportistaId:
+      form.via === "terrestre" ? form.transportistaId || null : null,
+    transportistaNombre:
+      form.via === "terrestre"
+        ? transportistasDisponibles.value.find(
+            (t) => String(t.id) === String(form.transportistaId),
+          )?.nombre || null
+        : null,
   };
 
   try {

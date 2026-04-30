@@ -4,7 +4,7 @@
     @submit="handleSubmit"
     :validation-schema="schema"
     :initial-values="initialValues"
-    v-slot="{ resetForm }"
+    v-slot="{ resetForm, values }"
   >
     <div class="row my-6">
       <!-- Encabezado: Fecha / Nº Orden -->
@@ -246,6 +246,17 @@
                 </Field>
                 <ErrorMessage name="origen_string" class="text-danger" />
               </div>
+              <div class="col-md-6 mb-4">
+                <label class="required form-label">Dirección completa de origen</label>
+                <Field
+                  name="origen_direccion"
+                  as="textarea"
+                  rows="2"
+                  class="form-control form-control-solid"
+                  placeholder="Calle, número, entre calles, municipio, provincia"
+                />
+                <ErrorMessage name="origen_direccion" class="text-danger" />
+              </div>
 
               <div class="col-md-6 mb-4">
                 <label class="required form-label"
@@ -266,6 +277,17 @@
                   </option>
                 </Field>
                 <ErrorMessage name="destino_string" class="text-danger" />
+              </div>
+              <div class="col-md-6 mb-4">
+                <label class="required form-label">Dirección completa de destino</label>
+                <Field
+                  name="destino_direccion"
+                  as="textarea"
+                  rows="2"
+                  class="form-control form-control-solid"
+                  placeholder="Calle, número, entre calles, municipio, provincia"
+                />
+                <ErrorMessage name="destino_direccion" class="text-danger" />
               </div>
 
               <div class="col-md-12 mb-4">
@@ -320,6 +342,25 @@
                   <option value="multimodal">Multimodal</option>
                 </Field>
                 <ErrorMessage name="via" class="text-danger" />
+              </div>
+
+              <div class="col-md-12 mb-4" v-if="values.via === 'terrestre'">
+                <label class="required form-label">Transportista disponible</label>
+                <Field
+                  name="transportista_id"
+                  as="select"
+                  class="form-select form-select-solid"
+                >
+                  <option value="">Seleccione un transportista</option>
+                  <option
+                    v-for="transportista in transportistasDisponibles"
+                    :key="transportista.id"
+                    :value="String(transportista.id)"
+                  >
+                    {{ transportista.nombre }} - {{ transportista.tipoServicio }}
+                  </option>
+                </Field>
+                <ErrorMessage name="transportista_id" class="text-danger" />
               </div>
 
               <!-- Campos MARÍTIMA -->
@@ -517,6 +558,7 @@ import api from "@/services/api";
 import CargaApi from "@/axios/axios";
 import { useOrigenStore } from "@/stores/origen";
 import { useDestinoStore } from "@/stores/destino";
+import { useTransportistasStore } from "@/stores/transportistas";
 import { useCookies } from "vue3-cookies";
 
 export default defineComponent({
@@ -539,6 +581,15 @@ export default defineComponent({
     const destinos = computed(() => destinoStore.destinoes);
     const origenStore = useOrigenStore();
     const origenes = computed(() => origenStore.origenes);
+    const transportistasStore = useTransportistasStore();
+    const transportistasDisponibles = computed(() =>
+      transportistasStore.getTransportistas.filter(
+        (t) =>
+          t.estado?.toLowerCase() === "activo" &&
+          (t.tipoServicio?.toLowerCase().includes("carga") ||
+            t.tipoServicio?.toLowerCase().includes("terrestre")),
+      ),
+    );
 
     const { cookies } = useCookies();
     const cookieUser = ref<any>(null);
@@ -586,10 +637,13 @@ export default defineComponent({
       // vol_bulto: 0.001, // numérico: valor por defecto válido
       origen_string: "", // si tienes origenes, lo fijaremos luego
       destino_string: "", // si tienes destinos, lo fijaremos luego
+      origen_direccion: "",
+      destino_direccion: "",
       nombre_destinatario: "",
       autorizado_recoger: "",
       tipo_carga: "",
       via: "",
+      transportista_id: "",
       nombre_buque: "",
       mfto_no: "",
       bl_no: "",
@@ -755,6 +809,14 @@ export default defineComponent({
 
       // origen_string: yup.string().required("El origen es requerido"),
       // destino_string: yup.string().required("El destino es requerido"),
+      origen_direccion: yup
+        .string()
+        .required("La dirección de origen es requerida")
+        .min(10, "La dirección de origen debe ser más específica"),
+      destino_direccion: yup
+        .string()
+        .required("La dirección de destino es requerida")
+        .min(10, "La dirección de destino debe ser más específica"),
       nombre_destinatario: yup.string().optional(),
 
       autorizado_recoger: yup
@@ -764,6 +826,11 @@ export default defineComponent({
 
       tipo_carga: yup.string().required("El tipo de carga es requerido"),
       via: yup.string().required("La vía es requerida"),
+      transportista_id: yup.string().when("via", {
+        is: (via: string) => via === "terrestre",
+        then: (rule) => rule.required("Debe seleccionar un transportista"),
+        otherwise: (rule) => rule.optional(),
+      }),
 
       // campos opcionales marítima/terrestre...
       nombre_buque: yup.string().optional(),
@@ -864,6 +931,10 @@ export default defineComponent({
       tipo_carga: string;
       origen_string: string;
       destino_string: string;
+      origen_direccion: string;
+      destino_direccion: string;
+      transportista_id?: string;
+      transportista_nombre?: string;
       nombre_destinatario?: string;
       via?: string;
       nombre_buque?: string;
@@ -943,8 +1014,15 @@ export default defineComponent({
           tipo_carga: values.tipo_carga,
           origen_string: values.origen_string,
           destino_string: values.destino_string,
+          origen_direccion: values.origen_direccion,
+          destino_direccion: values.destino_direccion,
           nombre_destinatario: values.nombre_destinatario,
           via: values.via,
+          transportista_id: values.transportista_id || undefined,
+          transportista_nombre:
+            transportistasDisponibles.value.find(
+              (t) => String(t.id) === String(values.transportista_id),
+            )?.nombre || undefined,
           nombre_buque: values.nombre_buque,
           mfto_no: values.mfto_no,
           bl_no: values.bl_no,
@@ -1062,6 +1140,7 @@ export default defineComponent({
       comisionServicio,
       precioTotal,
       clients,
+      transportistasDisponibles,
       selectedClientId,
       isAdmin,
       clientDisplayName,
