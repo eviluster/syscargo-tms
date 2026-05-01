@@ -160,6 +160,16 @@ export const useAuthStore = defineStore("auth", () => {
       });
   }
 
+  function resetPassword(token: string, email: string, password: string, password_confirmation: string) {
+    return ApiService.post("reset_password", { token, email, password, password_confirmation })
+      .then(() => {
+        setError({});
+      })
+      .catch(({ response }) => {
+        setError(response.data.errors);
+      });
+  }
+
   function verifyAuth() {
     if (JwtService.getToken()) {
       ApiService.setHeader();
@@ -187,6 +197,7 @@ export const useAuthStore = defineStore("auth", () => {
     signOut,
     register,
     forgotPassword,
+    resetPassword,
     verifyAuth,
     isTokenExpired,
   };
