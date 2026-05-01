@@ -28,36 +28,6 @@ async function bootstrap() {
   app.use(json({ limit: '20mb' }));
   app.use(urlencoded({ limit: '20mb', extended: true }));
 
-  const allowedOrigins = ['https://admin.syscargo.cu', 'https://tms.syscargo.cu'];
-  app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    const origin = req.headers.origin as string;
-    if (allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    }
-    res.setHeader(
-      'Access-Control-Allow-Methods',
-      'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    );
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'Content-Type,Authorization,Accept',
-    );
-    return res.status(204).end();
-  }
-  next();
-  });
-  
-  app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    console.log('DEBUG OPTIONS ->', req.method, req.originalUrl, 'host:', req.headers.host);
-    // marcar la respuesta para reconocer si fue emitida por Node
-    res.setHeader('X-From-Node', 'true');
-    // NOTA: no terminamos la respuesta aquí, solo la marcamos.
-  }
-  next();
-});
-
   // Habilitar CORS con opciones explícitas (incluye OPTIONS)
   app.enableCors({
     origin: ['https://admin.syscargo.cu', 'https://tms.syscargo.cu'],

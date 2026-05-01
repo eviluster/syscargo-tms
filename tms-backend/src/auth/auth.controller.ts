@@ -21,6 +21,8 @@ import { LoginDto } from './dto/login.dto';
 import { JwtGuard } from './guard';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { Request, Response } from 'express';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/reset-password.dto';
+
 // import { GetUserAdmin } from './decorator';
 // import { JwtGuard } from './guard';
 // import { User } from '../user/entities/user.entity';
@@ -74,5 +76,21 @@ export class AuthController {
   @ApiOperation({ summary: 'Cierra sesión' })
   loggedAdmin(@Body() dto: LogOutDto, @GetUserAdmin() user: User) {
     return this.authSetvice.loggedOut(dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('forgot_password')
+  @ApiOperation({ summary: 'Solicita restablecimiento de contraseña' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.authSetvice.forgotPassword(dto.email);
+    return { message: 'Si existe una cuenta con este correo, se ha enviado un enlace para restablecer la contraseña.' };
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('reset_password')
+  @ApiOperation({ summary: 'Restablece la contraseña' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.authSetvice.resetPassword(dto.token, dto.email, dto.password, dto.password_confirmation);
+    return { message: 'Contraseña restablecida exitosamente.' };
   }
 }

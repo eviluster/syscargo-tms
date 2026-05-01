@@ -20,6 +20,8 @@ import { TokenDto } from './dto/token.dto';
 import { LogOutDto } from './dto/logOut.dto';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { randomBytes } from 'crypto';
 
 @Injectable({})
 export class AuthService {
@@ -29,6 +31,10 @@ export class AuthService {
 
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
+
+    @InjectRepository(PasswordResetToken)
+    private passwordResetTokenRepository: Repository<PasswordResetToken>,
+
     private jwt: JwtService,
     private config: ConfigService,
 
@@ -274,6 +280,69 @@ export class AuthService {
     } catch (error) {
       return false; // Invalid token
     }
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    // Always return a generic success message to prevent user enumeration
+    if (!user) {
+      console.log(`Password reset requested for non-existent email: ${email}`);
+      return;
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // Token valid for 1 hour
+
+    const passwordResetToken = this.passwordResetTokenRepository.create({
+      token,
+      expiresAt,
+      user,
+      email,
+    });
+
+    await this.passwordResetTokenRepository.save(passwordResetToken);
+
+    // Simulate sending email (replace with actual email service)
+    console.log(`Sending password reset email to ${email} with token: ${token}`);
+    console.log(`Reset link: /reset-password?token=${token}&email=${email}`);
+    // In a real application, you would use an email service here:
+    // await this.emailService.sendResetPasswordEmail(user, token);
+  }
+
+  async resetPassword(token: string, email: string, newPassword: string, passwordConfirmation: string): Promise<void> {
+    if (newPassword !== passwordConfirmation) {
+      throw new ForbiddenException('Las contraseñas no coinciden.');
+    }
+
+    const resetTokenEntity = await this.passwordResetTokenRepository.findOne({
+      where: { token, email, used: false },
+      relations: ['user'],
+    });
+
+    if (!resetTokenEntity || resetTokenEntity.expiresAt < new Date()) {
+      throw new ForbiddenException('Token de restablecimiento inválido o expirado.');
+    }
+
+    const user = resetTokenEntity.user;
+    if (!user) {
+      throw new ForbiddenException('Usuario no encontrado asociado al token.');
+    }
+
+    // Apply password policy (e.g., minimum length, complexity)
+    if (newPassword.length < 6) { // Example: minimum 6 characters
+      throw new ForbiddenException('La contraseña debe tener al menos 6 caracteres.');
+    }
+    // Add more password policy checks here (e.g., complexity)
+
+    user.hash = await argon.hash(newPassword);
+    await this.userRepository.save(user);
+
+    resetTokenEntity.used = true;
+    await this.passwordResetTokenRepository.save(resetTokenEntity);
+
+    console.log(`Password for user ${user.username} reset successfully.`);
   }
 
   async loggedOut(dto: LogOutDto): Promise<any> {
