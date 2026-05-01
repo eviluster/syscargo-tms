@@ -1175,6 +1175,15 @@ const routes: Array<RouteRecordRaw> = [
           pageTitle: "Password reset",
         },
       },
+      {
+        path: "/password-reset-complete",
+        name: "password-reset-complete",
+        component: () =>
+          import("@/views/crafted/authentication/basic-flow/PasswordResetComplete.vue"),
+        meta: {
+          pageTitle: "Complete Password Reset",
+        },
+      },
     ],
   },
   {
@@ -1230,7 +1239,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const { cookies } = useCookies();
   const isAuthenticated = !!cookies.get("refresh_token"); // O tu método de verificación
-  const publicPages = ["sign-in", "sign-up", "password-reset"];
+  const publicPages = ["sign-in", "sign-up", "password-reset", "password-reset-complete"];
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: "sign-in" });
   } else if (publicPages.includes(String(to.name)) && isAuthenticated) {
