@@ -151,7 +151,7 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   function forgotPassword(email: string) {
-    return ApiService.post("forgot_password", email)
+    return ApiService.post("auth/forgot_password", { email })
       .then(() => {
         setError({});
       })
@@ -161,7 +161,7 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   function resetPassword(token: string, email: string, password: string, password_confirmation: string) {
-    return ApiService.post("reset_password", { token, email, password, password_confirmation })
+    return ApiService.post("auth/reset_password", { token, email, password, password_confirmation })
       .then(() => {
         setError({});
       })
