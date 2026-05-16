@@ -150,25 +150,44 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
-  function forgotPassword(email: string) {
-    return ApiService.post("auth/forgot_password", { email })
-      .then(() => {
-        setError({});
-      })
-      .catch(({ response }) => {
-        setError(response.data.errors);
-      });
+  async function forgotPassword(email: string) {
+    try {
+      await api.post("/auth/forgot_password", { email });
+      setError({});
+    } catch (error: any) {
+      const msg = error?.response?.data?.message ?? { general: "Error al enviar el correo" };
+      setError(msg);
+    }
   }
 
-  function resetPassword(token: string, email: string, password: string, password_confirmation: string) {
-    return ApiService.post("auth/reset_password", { token, email, password, password_confirmation })
-      .then(() => {
-        setError({});
-      })
-      .catch(({ response }) => {
-        setError(response.data.errors);
-      });
+  async function resetPassword(token: string, email: string, password: string, password_confirmation: string) {
+    try {
+      await api.post("/auth/reset_password", { token, email, password, password_confirmation });
+      setError({});
+    } catch (error: any) {
+      const msg = error?.response?.data?.message ?? { general: "Error al restablecer la contraseña" };
+      setError(msg);
+    }
   }
+  // function forgotPassword(email: string) {
+  //   return ApiService.post("auth/forgot_password", { email })
+  //     .then(() => {
+  //       setError({});
+  //     })
+  //     .catch(({ response }) => {
+  //       setError(response.data.errors);
+  //     });
+  // }
+
+  // function resetPassword(token: string, email: string, password: string, password_confirmation: string) {
+  //   return ApiService.post("auth/reset_password", { token, email, password, password_confirmation })
+  //     .then(() => {
+  //       setError({});
+  //     })
+  //     .catch(({ response }) => {
+  //       setError(response.data.errors);
+  //     });
+  // }
 
   function verifyAuth() {
     if (JwtService.getToken()) {

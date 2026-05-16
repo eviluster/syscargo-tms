@@ -1,5 +1,5 @@
 import {
-  ConflictException,
+  ForbiddenException,
   createParamDecorator,
   ExecutionContext,
 } from '@nestjs/common';
@@ -28,7 +28,7 @@ export const GetUserAdmin = createParamDecorator(
       // Propietario
       return user;
     } else {
-      throw new ConflictException(
+      throw new ForbiddenException(
         'El usuario no tiene permisos para ejecutar esta acción',
       );
     }
@@ -48,7 +48,7 @@ export const GetUserComercial = createParamDecorator(
       // Propietario
       return user;
     } else {
-      throw new ConflictException(
+      throw new ForbiddenException(
         'El usuario no tiene permisos para ejecutar esta acción',
       );
     }
@@ -68,7 +68,7 @@ export const GetUserEconComercial = createParamDecorator(
       // Propietario
       return user;
     } else {
-      throw new ConflictException(
+      throw new ForbiddenException(
         'El usuario no tiene permisos para ejecutar esta acción',
       );
     }
@@ -88,7 +88,7 @@ export const GetUserEconomico = createParamDecorator(
       // Propietario
       return user;
     } else {
-      throw new ConflictException(
+      throw new ForbiddenException(
         'El usuario no tiene permisos para ejecutar esta acción',
       );
     }
@@ -108,7 +108,7 @@ export const GetUserServices = createParamDecorator(
       // Propietario
       return user;
     } else {
-      throw new ConflictException(
+      throw new ForbiddenException(
         'El usuario no tiene permisos para ejecutar esta acción',
       );
     }
@@ -128,7 +128,7 @@ export const GetUserClient = createParamDecorator(
       // Propietario
       return user;
     } else {
-      throw new ConflictException(
+      throw new ForbiddenException(
         'El usuario no tiene permisos para ejecutar esta acción',
       );
     }
@@ -149,7 +149,7 @@ export const GetUserCalendar = createParamDecorator(
       // Propietario
       return user;
     } else {
-      throw new ConflictException(
+      throw new ForbiddenException(
         'El usuario no tiene permisos para ejecutar esta acción',
       );
     }
@@ -169,7 +169,7 @@ export const GetUserBussiness = createParamDecorator(
       // Propietario
       return user;
     } else {
-      throw new ConflictException(
+      throw new ForbiddenException(
         'El usuario no tiene permisos para ejecutar esta acción',
       );
     }

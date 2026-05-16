@@ -113,6 +113,22 @@
           </option>
         </select>
       </div>
+
+      <div class="col-md-6 mb-3" v-if="form.via === 'terrestre'">
+        <label class="form-label">Distancia estimada (km)</label>
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          v-model.number="form.distanciaKm"
+          class="form-control"
+          placeholder="Opcional: para calcular tramo por km"
+        />
+        <div class="form-text">
+          Si la indica, el precio estimado incluirá (km × tarifa por km del
+          transportista).
+        </div>
+      </div>
     </div>
 
     <div class="d-flex justify-content-end mt-3">
@@ -171,6 +187,7 @@ const form = reactive({
   tipoCarga: "",
   via: "",
   transportistaId: "",
+  distanciaKm: null,
 });
 
 onMounted(async () => {
@@ -183,6 +200,9 @@ onMounted(async () => {
   if (!destinoStore.destinoes || destinoStore.destinoes.length === 0) {
     if (typeof destinoStore.fetchDestinos === "function")
       await destinoStore.fetchDestinos();
+  }
+  if (!transportistasStore.getTransportistas || transportistasStore.getTransportistas.length === 0) {
+    await transportistasStore.fetchTransportistas();
   }
 
   const viaFromQuery = String(route.query.via || "").toLowerCase();
@@ -246,6 +266,10 @@ async function submit() {
             (t) => String(t.id) === String(form.transportistaId),
           )?.nombre || null
         : null,
+    distanciaKm:
+      form.via === "terrestre" && form.distanciaKm != null
+        ? Number(form.distanciaKm)
+        : undefined,
   };
 
   try {

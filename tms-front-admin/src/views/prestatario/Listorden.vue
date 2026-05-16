@@ -24,7 +24,7 @@
           <div class="small-controls d-flex gap-2 align-items-center">
             <select
               v-model="filters.status"
-              @change="fetchProposals"
+              @change="onStatusChange"
               class="form-select select-control"
               aria-label="Filtrar por estado"
             >
@@ -272,7 +272,7 @@
               selectedProposal.status
             }}</span>
             <div v-if="selectedProposal.carga?.estado" class="small text-muted">
-              Estado carga: {{ humanStatus(selectedProposal.carga.status) }}
+              Estado carga: {{ humanStatus(selectedProposal.carga.estado) }}
             </div>
           </div>
 
@@ -1321,6 +1321,12 @@ export default defineComponent({
       offset.value = 0;
       fetchProposals();
     }, 400);
+
+    const onStatusChange = () => {
+      console.log('[onStatusChange] Filtro cambiado a:', filters.value.status);
+      offset.value = 0;
+      fetchProposals();
+    };
 
     onMounted(async () => {
       // ... tu fetchProposals() ya existente

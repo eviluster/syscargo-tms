@@ -16,6 +16,8 @@ import { NotificationsService } from 'src/notifications/notifications.service';
 import { User } from 'src/user/entities/user.entity';
 import { NotificationType } from 'src/notifications/entities/notification.entity';
 import { UpdatePeticionDto } from './dto/update-peticion.dto';
+import { ProposalService } from 'src/proposal/proposal.service';
+import { calcularPrecioTerrestreEstimado } from 'src/common/pricing/calc-precio-terrestre';
 
 @Injectable()
 export class PeticionService {
@@ -37,6 +39,8 @@ export class PeticionService {
     private readonly notificationsService: NotificationsService,
 
     private readonly dataSource: DataSource,
+
+    private readonly proposalService: ProposalService,
   ) {}
 
   /**
@@ -56,6 +60,41 @@ export class PeticionService {
       );
     }
 
+    const via = String(dto.via || '')
+      .trim()
+      .toLowerCase();
+    const isTerrestre = via === 'terrestre';
+
+    if (isTerrestre && !dto.transportistaId) {
+      throw new BadRequestException(
+        'Para modalidad terrestre debe indicarse transportistaId (prestatario)',
+      );
+    }
+
+    let transportista: Prestatario | null = null;
+    let precioEstimado: number | null = null;
+
+    if (isTerrestre && dto.transportistaId) {
+      transportista = await this.prestatarioRepo
+        .createQueryBuilder('pr')
+        .where('pr.id = :id', { id: dto.transportistaId })
+        .getOne();
+
+      if (!transportista) {
+        throw new NotFoundException('Transportista / prestatario no encontrado');
+      }
+
+      precioEstimado = calcularPrecioTerrestreEstimado(transportista as any, {
+        peso: Number(dto.peso),
+        volumen: dto.volumen != null ? Number(dto.volumen) : null,
+        tipoCarga: dto.tipoCarga,
+        distanciaKm:
+          dto.distanciaKm != null && dto.distanciaKm !== (undefined as any)
+            ? Number(dto.distanciaKm)
+            : null,
+      });
+    }
+
     const pet = this.peticionRepo.create({
       nombreEntidad: dto.nombreEntidad,
       nombreCarga: dto.nombreCarga,
@@ -66,9 +105,42 @@ export class PeticionService {
       tipoCarga: dto.tipoCarga,
       cliente: client,
       status: 'abierta' as PeticionStatus,
+      via: dto.via ?? null,
+      origenDireccion: dto.origenDireccion ?? null,
+      destinoDireccion: dto.destinoDireccion ?? null,
+      distanciaKm:
+        dto.distanciaKm != null && dto.distanciaKm !== (undefined as any)
+          ? Number(dto.distanciaKm)
+          : null,
+      precioEstimado,
+      transportistaPrestatario: transportista
+        ? ({ id: transportista.id } as Prestatario)
+        : null,
     });
 
-    return this.peticionRepo.save(pet);
+    const saved = await this.peticionRepo.save(pet);
+
+    if (isTerrestre && dto.transportistaId) {
+      try {
+        await this.proposalService.create(
+          {
+            peticionId: saved.id,
+            prestatarioId: dto.transportistaId,
+            message: 'Petición de carga (modalidad terrestre)',
+          } as any,
+          user,
+        );
+      } catch (err) {
+        this.logger.error(
+          'Fallo al crear propuesta para petición terrestre; se revierte la petición',
+          err instanceof Error ? err.stack : String(err),
+        );
+        await this.peticionRepo.delete({ id: saved.id });
+        throw err;
+      }
+    }
+
+    return saved;
   }
 
   /**
@@ -274,6 +346,12 @@ export class PeticionService {
       if (dto.origen !== undefined) pet.origen = dto.origen;
       if (dto.destino !== undefined) pet.destino = dto.destino;
       if (dto.tipoCarga !== undefined) pet.tipoCarga = dto.tipoCarga;
+      if (dto.via !== undefined) pet.via = dto.via;
+      if (dto.origenDireccion !== undefined)
+        pet.origenDireccion = dto.origenDireccion;
+      if (dto.destinoDireccion !== undefined)
+        pet.destinoDireccion = dto.destinoDireccion;
+      if (dto.distanciaKm !== undefined) pet.distanciaKm = dto.distanciaKm;
 
       this.logger.debug('[PeticionService.update] saving pet...');
       const saved = await this.peticionRepo.save(pet);

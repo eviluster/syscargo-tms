@@ -1,5 +1,5 @@
 <!-- SignUp.vue (agrupado: secciones envueltas en tarjetas) -->
-<template>
+<<template>
   <div class="w-lg-700px p-10 mx-auto">
     <div class="text-center mb-8">
       <h1 class="title">Crear una cuenta</h1>
@@ -148,9 +148,7 @@
             >
               <option value="">Seleccione modalidad</option>
               <option value="aerea">Aérea</option>
-              <!-- <option value="maritima">Marítima</option> -->
               <option value="terrestre">Terrestre</option>
-              <!-- <option value="ferroviaria">Ferroviaria</option> -->
             </select>
             <div class="text-danger fs-7 mt-1" v-if="errors.modalidad">
               {{ errors.modalidad }}
@@ -188,6 +186,49 @@
             </div>
             <div class="text-danger fs-7 mt-1" v-if="errors.servicios">
               {{ errors.servicios }}
+            </div>
+          </div>
+
+          <!-- Precios Terrestre -->
+          <div v-if="formData.servicios.includes('terrestre')" class="col-12 section-card">
+            <div class="section-header small">Precios Servicio Terrestre</div>
+            <div class="row g-2">
+              <div class="col-md-4">
+                <label class="form-label">Precio por km</label>
+                <input
+                  type="number"
+                  v-model.number="formData.precioTerrestrePorKm"
+                  min="0"
+                  step="0.01"
+                  class="form-control form-control-solid"
+                  placeholder="Ej: 1500"
+                />
+                <div class="text-muted fs-7 mt-1">Por kilómetro recorrido</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Precio por contenedor</label>
+                <input
+                  type="number"
+                  v-model.number="formData.precioTerrestrePorCargaContenedor"
+                  min="0"
+                  step="0.01"
+                  class="form-control form-control-solid"
+                  placeholder="Ej: 80000"
+                />
+                <div class="text-muted fs-7 mt-1">Por contenedor movido</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Precio carga general</label>
+                <input
+                  type="number"
+                  v-model.number="formData.precioTerrestrePorCargaGeneral"
+                  min="0"
+                  step="0.01"
+                  class="form-control form-control-solid"
+                  placeholder="Ej: 50000"
+                />
+                <div class="text-muted fs-7 mt-1">Por carga general</div>
+              </div>
             </div>
           </div>
 
@@ -303,7 +344,7 @@
             </div>
           </div>
 
-          <!-- Alquiler details (kept as before, inside its own section-card) -->
+          <!-- Alquiler details -->
           <div v-if="formData.providesAlquiler" class="col-12 section-card">
             <div class="section-header small">Alquiler de almacenes</div>
 
@@ -343,8 +384,6 @@
               </div>
             </div>
 
-            <!-- antes: select multiple para servicios de alquiler -->
-            <!-- reemplaza por: -->
             <div class="mt-3">
               <label class="form-label">Servicios de alquiler</label>
               <div class="d-flex flex-wrap gap-2 mt-2 checkbox-grid">
@@ -855,8 +894,6 @@
 </template>
 
 <script lang="ts">
-/* (mismo script que ya tenías, con campos en camelCase y validaciones) */
-/* Para mantener la respuesta compacta no repito el script aquí: usa el script que ya tienes en tu archivo actual. */
 import { defineComponent, reactive, ref, onMounted, computed } from "vue";
 import * as yup from "yup";
 import type { ValidationError } from "yup";
@@ -880,10 +917,8 @@ export default defineComponent({
 
     const cargaOptions = ["Seco", "Refrigerado", "Carga general"];
     const viaOptions = [
-      // { value: "maritima", label: "Marítima" },
       { value: "aerea", label: "Aérea" },
       { value: "terrestre", label: "Terrestre" },
-      // { value: "ferroviaria", label: "Ferroviaria" },
     ];
 
     const alquilerOptions = [
@@ -940,8 +975,10 @@ export default defineComponent({
       licencia: { numero: "", categoria: "", vence: "" },
       ayudantes: [] as Ayudante[],
       servicios: [] as string[],
+      precioTerrestrePorKm: null as number | null,
+      precioTerrestrePorCargaContenedor: null as number | null,
+      precioTerrestrePorCargaGeneral: null as number | null,
 
-      // cliente (camelCase)
       company: "",
       contactName: "",
       contactPhone: "",
@@ -949,27 +986,23 @@ export default defineComponent({
       address: "",
       modalidad: "",
 
-      // alquiler (camelCase)
       providesAlquiler: false,
       metrosDisponiblesAlquiler: null,
       alturaMAlquiler: null,
       serviciosPrestAlquiler: [] as string[],
 
-      // talleres
       providesTalleres: false,
       talleresNumTecnicos: null,
       talleresHorario: "",
       talleresServicios: [] as string[],
       talleresCapacidadVehiculos: null,
 
-      // GPS
       providesGPS: false,
       gpsProviders: [] as string[],
       gpsDevicesAvailable: null,
       gpsPlans: "",
       gpsIntegrationApi: false,
 
-      // Alojamiento
       providesAlojamiento: false,
       habitacionesDisponibles: null,
       capacidadPersonas: null,
@@ -1372,6 +1405,16 @@ export default defineComponent({
             payload.tipoHabitaciones = [];
             payload.serviciosIncluidosAlojamiento = [];
           }
+
+          // precios terrestre
+          if (formData.servicios.includes('terrestre')) {
+            if (formData.precioTerrestrePorKm != null)
+              payload.precioTerrestrePorKm = formData.precioTerrestrePorKm;
+            if (formData.precioTerrestrePorCargaContenedor != null)
+              payload.precioTerrestrePorCargaContenedor = formData.precioTerrestrePorCargaContenedor;
+            if (formData.precioTerrestrePorCargaGeneral != null)
+              payload.precioTerrestrePorCargaGeneral = formData.precioTerrestrePorCargaGeneral;
+          }
         }
 
         if (isCliente.value) {
@@ -1433,7 +1476,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Organización visual para los grupos de checkboxes */
 .checkbox-grid {
   gap: 0.5rem;
 }
@@ -1443,7 +1485,6 @@ export default defineComponent({
   align-items: center;
   gap: 0.5rem;
 }
-/* mejora legibilidad de etiquetas en tarjetas oscuras */
 .section-card .form-check-label.text-white {
   color: #ffffff;
   font-weight: 500;
@@ -1465,7 +1506,6 @@ export default defineComponent({
   margin-bottom: 1rem;
 }
 
-/* tarjeta principal de sección */
 .section-card {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -1474,7 +1514,6 @@ export default defineComponent({
   margin-bottom: 0.9rem;
 }
 
-/* sub-secciones */
 .sub-section {
   margin-bottom: 0.6rem;
 }
@@ -1489,7 +1528,6 @@ export default defineComponent({
   font-weight: 600;
 }
 
-/* etiquetas y textos en blanco para mejor legibilidad */
 .form-label,
 .form-check-label,
 .title,
@@ -1501,7 +1539,6 @@ export default defineComponent({
   background: transparent;
 }
 
-/* inputs/selects contraste */
 .form-control.form-control-solid,
 .form-select.form-select-solid {
   background: rgba(0, 0, 0, 0.45);
@@ -1509,7 +1546,6 @@ export default defineComponent({
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-/* via checkbox labels blancos */
 .via-check {
   min-width: 150px;
 }
@@ -1517,12 +1553,10 @@ export default defineComponent({
   color: #ffffff;
 }
 
-/* muted text ajustado para tema oscuro */
 .text-muted {
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
-/* errores visibles */
 .text-danger {
   color: #ff6b6b !important;
 }

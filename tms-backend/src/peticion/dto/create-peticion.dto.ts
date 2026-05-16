@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePeticionDto {
@@ -36,4 +42,30 @@ export class CreatePeticionDto {
   @IsNotEmpty()
   @IsString()
   tipoCarga: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  via?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  origenDireccion?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  destinoDireccion?: string;
+
+  /** UUID del prestatario (transportista terrestre) */
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  transportistaId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  distanciaKm?: number;
 }

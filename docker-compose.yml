@@ -99,7 +99,7 @@ services:
       - "traefik.http.routers.api-syscargo.middlewares=public-api@file"
       # Si NO manejas CORS en NestJS y el navegador llama directo a api.syscargo.cu,
       # usa esta línea en vez de la anterior:
-      # - "traefik.http.routers.api-syscargo.middlewares=public-api@file,cors@file"
+#      - "traefik.http.routers.api-syscargo.middlewares=public-api@file,cors@file"
       - "traefik.http.services.api-syscargo.loadbalancer.server.port=5000"
 #      - "traefik.http.routers.api-syscargo.middlewares=cors@file"
       - "traefik.docker.network=proxy"

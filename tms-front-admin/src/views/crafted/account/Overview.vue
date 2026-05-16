@@ -406,6 +406,101 @@
           </div>
         </div>
 
+        <!-- Precios servicio terrestre (usuarios con vía terrestre) -->
+        <div
+          v-if="
+            serviciosIncluyeTerrestre(
+              editing ? draft.servicios : prestatario?.servicios,
+            )
+          "
+          class="row mb-4"
+        >
+          <label class="col-lg-4 fw-semibold text-muted"
+            >Precios servicio terrestre</label
+          >
+          <div class="col-lg-8">
+            <div v-if="!editing" class="row g-2">
+              <div class="col-md-4">
+                <div class="text-muted fs-7">Precio por km</div>
+                <div class="fw-bold fs-6">
+                  {{
+                    formatPrecioTerrestreValor(
+                      precioTerrestreVistaPrestatario.precioTerrestrePorKm,
+                    )
+                  }}
+                </div>
+                <div class="text-muted fs-7 mt-1">Por kilómetro recorrido</div>
+              </div>
+              <div class="col-md-4">
+                <div class="text-muted fs-7">Precio por contenedor</div>
+                <div class="fw-bold fs-6">
+                  {{
+                    formatPrecioTerrestreValor(
+                      precioTerrestreVistaPrestatario.precioTerrestrePorCargaContenedor,
+                    )
+                  }}
+                </div>
+                <div class="text-muted fs-7 mt-1">Por contenedor movido</div>
+              </div>
+              <div class="col-md-4">
+                <div class="text-muted fs-7">Precio carga general</div>
+                <div class="fw-bold fs-6">
+                  {{
+                    formatPrecioTerrestreValor(
+                      precioTerrestreVistaPrestatario.precioTerrestrePorCargaGeneral,
+                    )
+                  }}
+                </div>
+                <div class="text-muted fs-7 mt-1">Por carga general</div>
+              </div>
+            </div>
+            <div v-else class="row g-2">
+              <div class="col-md-4">
+                <label class="form-label fs-7">Precio por km</label>
+                <input
+                  type="number"
+                  v-model.number="draft.precioTerrestrePorKm"
+                  min="0"
+                  step="0.01"
+                  class="form-control form-control-solid"
+                  placeholder="Ej: 1500"
+                />
+                <small class="text-muted d-block mt-1"
+                  >Por kilómetro recorrido</small
+                >
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fs-7">Precio por contenedor</label>
+                <input
+                  type="number"
+                  v-model.number="draft.precioTerrestrePorCargaContenedor"
+                  min="0"
+                  step="0.01"
+                  class="form-control form-control-solid"
+                  placeholder="Ej: 80000"
+                />
+                <small class="text-muted d-block mt-1"
+                  >Por contenedor movido</small
+                >
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fs-7">Precio carga general</label>
+                <input
+                  type="number"
+                  v-model.number="draft.precioTerrestrePorCargaGeneral"
+                  min="0"
+                  step="0.01"
+                  class="form-control form-control-solid"
+                  placeholder="Ej: 50000"
+                />
+                <small class="text-muted d-block mt-1"
+                  >Por carga general</small
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- ALQUILER: vista + edición -->
         <div class="row mb-4">
           <label class="col-lg-4 fw-semibold text-muted"
@@ -1080,6 +1175,11 @@ export default defineComponent({
       // servicios (vías)
       servicios: [] as string[],
 
+      // precios servicio terrestre (mismo contrato que SignUp / backend)
+      precioTerrestrePorKm: null as number | null,
+      precioTerrestrePorCargaContenedor: null as number | null,
+      precioTerrestrePorCargaGeneral: null as number | null,
+
       // alquiler (camelCase)
       offersAlquiler: false,
       serviciosPrestAlquiler: [] as string[],
@@ -1132,6 +1232,93 @@ export default defineComponent({
       { value: "ferroviaria", label: "Ferroviaria" },
       { value: "multimodal", label: "Multimodal" },
     ];
+
+    const viaCanonicalValues = new Set(viaOptions.map((o) => o.value));
+
+    /** Normaliza valores de vía desde BD (mayúsculas / acentos) a los `value` de viaOptions */
+    function normalizeServicioVia(val: unknown): string {
+      const raw = String(val ?? "")
+        .trim()
+        .toLowerCase();
+      const map: Record<string, string> = {
+        marítima: "maritima",
+        maritima: "maritima",
+        "aérea": "aerea",
+        aerea: "aerea",
+        terrestre: "terrestre",
+        ferroviaria: "ferroviaria",
+        multimodal: "multimodal",
+      };
+      return map[raw] ?? raw;
+    }
+
+    function normalizeServiciosList(list: unknown): string[] {
+      const arr = Array.isArray(list) ? list : list != null ? [list] : [];
+      const out: string[] = [];
+      for (const item of arr) {
+        const n = normalizeServicioVia(item);
+        if (n && viaCanonicalValues.has(n)) out.push(n);
+      }
+      return [...new Set(out)];
+    }
+
+    function serviciosIncluyeTerrestre(servicios: unknown): boolean {
+      const arr = Array.isArray(servicios) ? servicios : [];
+      return arr.some((x) => normalizeServicioVia(x) === "terrestre");
+    }
+
+    function mergePrecioTerrestreFromSource(src: any) {
+      const o = extractPrecioTerrestreFrom(src);
+      draft.precioTerrestrePorKm = o.precioTerrestrePorKm;
+      draft.precioTerrestrePorCargaContenedor =
+        o.precioTerrestrePorCargaContenedor;
+      draft.precioTerrestrePorCargaGeneral = o.precioTerrestrePorCargaGeneral;
+    }
+
+    function extractPrecioTerrestreFrom(src: any) {
+      if (!src) {
+        return {
+          precioTerrestrePorKm: null as number | null,
+          precioTerrestrePorCargaContenedor: null as number | null,
+          precioTerrestrePorCargaGeneral: null as number | null,
+        };
+      }
+      const pt = src.precioTerrestre ?? src.precio_terrestre;
+      const porCarga =
+        pt?.precioPorCarga && typeof pt.precioPorCarga === "object"
+          ? pt.precioPorCarga
+          : {};
+
+      const km =
+        src.precioTerrestrePorKm ??
+        src.precio_terrestre_por_km ??
+        pt?.precioPorKm ??
+        null;
+      const cont =
+        src.precioTerrestrePorCargaContenedor ??
+        src.precio_terrestre_por_carga_contenedor ??
+        porCarga.contenedor ??
+        null;
+      const gen =
+        src.precioTerrestrePorCargaGeneral ??
+        src.precio_terrestre_por_carga_general ??
+        porCarga.carga_general ??
+        null;
+
+      return {
+        precioTerrestrePorKm: km != null && km !== "" ? Number(km) : null,
+        precioTerrestrePorCargaContenedor:
+          cont != null && cont !== "" ? Number(cont) : null,
+        precioTerrestrePorCargaGeneral:
+          gen != null && gen !== "" ? Number(gen) : null,
+      };
+    }
+
+    function formatPrecioTerrestreValor(n: number | null | undefined) {
+      if (n == null || n === ("" as any) || Number.isNaN(Number(n)))
+        return "-";
+      return String(n);
+    }
 
     const alquilerServicesOptions = [
       "Pick & Pack",
@@ -1191,6 +1378,10 @@ export default defineComponent({
     );
     const isClient = computed(() =>
       ["cliente", "client", "customer"].includes(roleNameLower.value),
+    );
+
+    const precioTerrestreVistaPrestatario = computed(() =>
+      extractPrecioTerrestreFrom(prestatario.value),
     );
 
     // ---------------------------
@@ -1329,11 +1520,14 @@ export default defineComponent({
       draft.maxWeight = mw != null ? Number(mw) : null;
       draft.maxVolume = mv != null ? Number(mv) : null;
 
-      draft.servicios = Array.isArray(s.servicios)
-        ? [...s.servicios]
-        : s.servicios
-          ? [s.servicios]
-          : [];
+      draft.servicios = normalizeServiciosList(
+        Array.isArray(s.servicios)
+          ? s.servicios
+          : s.servicios != null
+            ? [s.servicios]
+            : [],
+      );
+      mergePrecioTerrestreFromSource(s);
 
       // ALQUILER (acepta camelCase y snake_case)
       draft.serviciosPrestAlquiler = Array.isArray(s.serviciosPrestAlquiler)
@@ -1431,7 +1625,8 @@ export default defineComponent({
       }));
       draft.maxWeight = p.maxWeight ?? p.max_weight ?? null;
       draft.maxVolume = p.maxVolume ?? p.max_volume ?? null;
-      draft.servicios = Array.isArray(p.servicios) ? [...p.servicios] : [];
+      draft.servicios = normalizeServiciosList(p.servicios);
+      mergePrecioTerrestreFromSource(p);
 
       // alquiler
       draft.serviciosPrestAlquiler = Array.isArray(p.serviciosPrestAlquiler)
@@ -1567,7 +1762,9 @@ export default defineComponent({
     });
 
     function capitalizeServiceLabel(val: string) {
-      return String(val || "");
+      const canon = normalizeServicioVia(val);
+      const opt = viaOptions.find((o) => o.value === canon);
+      return opt ? opt.label : String(val || "");
     }
 
     function hasAlquiler(p: any) {
@@ -1648,9 +1845,17 @@ export default defineComponent({
             ayudantes: draft.ayudantes.map((h: any) => ({ ...h })),
             maxWeight: draft.maxWeight,
             maxVolume: draft.maxVolume,
-            servicios: Array.isArray(draft.servicios)
-              ? [...draft.servicios]
-              : [],
+            servicios: normalizeServiciosList(draft.servicios),
+
+            ...(serviciosIncluyeTerrestre(draft.servicios)
+              ? {
+                  precioTerrestrePorKm: draft.precioTerrestrePorKm ?? null,
+                  precioTerrestrePorCargaContenedor:
+                    draft.precioTerrestrePorCargaContenedor ?? null,
+                  precioTerrestrePorCargaGeneral:
+                    draft.precioTerrestrePorCargaGeneral ?? null,
+                }
+              : {}),
 
             // ALQUILER camelCase
             serviciosPrestAlquiler: Array.isArray(draft.serviciosPrestAlquiler)
@@ -1815,6 +2020,9 @@ export default defineComponent({
       displayMaxVolume,
       isPrestatario,
       isClient,
+      precioTerrestreVistaPrestatario,
+      serviciosIncluyeTerrestre,
+      formatPrecioTerrestreValor,
       roleLabel,
       viaOptions,
       alquilerServicesOptions,

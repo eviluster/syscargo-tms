@@ -9,13 +9,14 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Brackets } from 'typeorm';
 import { Proposal } from './entities/proposal.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { UpdateProposalStatusDto } from './dto/update-proposal-status.dto';
 import { Carga } from 'src/carga/entities/carga.entity';
 import { Prestatario } from 'src/prestatario/entities/prestatario.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Client } from 'src/cliente/entities/cliente.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { NotificationType } from 'src/notifications/entities/notification.entity';
 import { CargaStatus } from 'src/carga/entities/carga.entity';
@@ -38,6 +39,9 @@ export class ProposalService {
     @InjectRepository(Peticion)
     private readonly peticionRepo: Repository<Peticion>,
 
+    @InjectRepository(Client)
+    private readonly clientRepo: Repository<Client>,
+
     private readonly notificationsService: NotificationsService,
 
     private readonly dataSource: DataSource,
@@ -57,7 +61,8 @@ export class ProposalService {
   }
 
   private async sumAcceptedProposalsWeight(prestatarioId: string) {
-    const res: any = await this.proposalRepo
+    // Sumar peso de cargas aceptadas
+    const resCarga: any = await this.proposalRepo
       .createQueryBuilder('pr')
       .innerJoin('pr.carga', 'c')
       .innerJoin('pr.prestatario', 'p')
@@ -65,7 +70,18 @@ export class ProposalService {
       .andWhere('pr.status = :status', { status: 'accepted' })
       .select('COALESCE(SUM(c.peso_total),0)', 'sum')
       .getRawOne();
-    return Number(res?.sum ?? 0);
+
+    // Sumar peso de peticiones aceptadas
+    const resPet: any = await this.proposalRepo
+      .createQueryBuilder('pr')
+      .innerJoin('pr.peticion', 'pet')
+      .innerJoin('pr.prestatario', 'p')
+      .where('p.id = :prestatarioId', { prestatarioId })
+      .andWhere('pr.status = :status', { status: 'accepted' })
+      .select('COALESCE(SUM(pet.peso),0)', 'sum')
+      .getRawOne();
+
+    return Number(resCarga?.sum ?? 0) + Number(resPet?.sum ?? 0);
   }
 
   /**
@@ -324,6 +340,7 @@ export class ProposalService {
     const qb = this.proposalRepo
       .createQueryBuilder('pr')
       .leftJoinAndSelect('pr.carga', 'c')
+      .leftJoinAndSelect('pr.peticion', 'pet') // FALTABA: Join para acceder a datos de petición
       .leftJoinAndSelect('pr.prestatario', 'p')
       .leftJoinAndSelect('pr.proposer', 'proposer');
 
@@ -335,12 +352,20 @@ export class ProposalService {
       });
     } else if (
       roleName === 'cliente' ||
-      roleName === 'client' ||
-      roleName === 'cliente'
+      roleName === 'client'
     ) {
-      qb.leftJoin('c.cliente', 'cliente')
-        .leftJoin('cliente.user', 'cliente_user')
-        .andWhere('cliente_user.id = :userId', { userId: user.id });
+      const client = await this.clientRepo.findOne({
+        where: { user: { id: user.id } },
+      });
+      if (!client) throw new NotFoundException('Perfil de cliente no encontrado');
+
+      // Filtrar: Propuestas donde la carga ES del cliente O la petición ES del cliente
+      qb.andWhere(
+        new Brackets((wb) => {
+          wb.where('c.cliente = :clientId', { clientId: client.id })
+            .orWhere('pet.cliente = :clientId', { clientId: client.id });
+        }),
+      );
     } else if (roleName === 'administrador' || roleName === 'admin') {
       // admin: no filtro
     } else {
@@ -489,11 +514,16 @@ export class ProposalService {
         const proposerUserId =
           proposal.proposer?.id ?? (proposal.proposer as any)?.user?.id;
         if (proposerUserId) {
+          // recurso: carga o petición
+          const resourceLabel = proposal.carga
+            ? (proposal.carga.order_id ?? proposal.carga.id)
+            : (proposal.peticion?.nombreCarga ?? proposal.peticion?.id);
+
           // construir mensaje de notificación más informativo si hay vehicle
           let notifMessage =
             status === 'accepted'
-              ? `${proposal.prestatario?.name || 'Un prestatario'} ha aceptado la propuesta para la carga ${proposal.carga?.order_id ?? proposal.carga?.id}. Confirma para asignar.`
-              : `${proposal.prestatario?.name || 'Un prestatario'} ha rechazado la propuesta para la carga ${proposal.carga?.order_id ?? proposal.carga?.id}.`;
+              ? `${proposal.prestatario?.name || 'Un prestatario'} ha aceptado la propuesta para ${resourceLabel}. Confirma para asignar.`
+              : `${proposal.prestatario?.name || 'Un prestatario'} ha rechazado la propuesta para ${resourceLabel}.`;
 
           // si hay vehicle guardado, añadir breve mención
           const savedVehicle = (saved as any).assignedVehicle;
@@ -531,6 +561,7 @@ export class ProposalService {
             meta: {
               proposalId: (saved as Proposal).id,
               cargaId: proposal.carga?.id,
+              peticionId: proposal.peticion?.id,
               action: status === 'accepted' ? 'confirm_assignment' : 'info',
             },
             userTargetId: proposerUserId,
@@ -576,12 +607,21 @@ export class ProposalService {
       try {
         const prestatarioUserId = proposal.prestatario?.user?.id;
         if (prestatarioUserId) {
+          // recurso: carga o petición
+          const resourceLabel = proposal.carga
+            ? (proposal.carga.order_id ?? proposal.carga.id)
+            : (proposal.peticion?.nombreCarga ?? proposal.peticion?.id);
+
           await this.notificationsService.createNotification({
             title: 'Propuesta cancelada',
-            message: `La propuesta para la carga ${proposal.carga?.order_id ?? proposal.carga?.id} fue cancelada por el cliente.`,
+            message: `La propuesta para ${resourceLabel} fue cancelada por el cliente.`,
             type: NotificationType.PROPOSAL_CANCELLED,
             link: `/app/proposals/${(saved as Proposal).id}`,
-            meta: { proposalId: (saved as Proposal).id },
+            meta: {
+              proposalId: (saved as Proposal).id,
+              cargaId: proposal.carga?.id,
+              peticionId: proposal.peticion?.id,
+            },
             userTargetId: prestatarioUserId,
             userOriginId: actor.id,
           });
@@ -617,10 +657,81 @@ export class ProposalService {
    * (este método se mantiene igual funcionalmente)
    */
   async confirmAssignment(proposalId: string, actor: User) {
-    /* ... el resto del método tal como lo tenías ... */
-    // (lo dejé sin cambios funcionales aquí para no repetir el archivo entero)
-    // Si quieres que lo incluya completo lo añado sin problema.
-    return {}; // placeholder en esta copia; tu implementación real continúa abajo.
+    return this.dataSource.transaction(async (em) => {
+      const propRepo = em.getRepository(Proposal);
+      const petRepo = em.getRepository(Peticion);
+      const clientRepo = em.getRepository(Client);
+
+      const proposal = await propRepo.findOne({
+        where: { id: proposalId },
+        relations: ['prestatario', 'prestatario.user', 'peticion', 'carga'],
+      });
+
+      if (!proposal) {
+        throw new NotFoundException('Propuesta no encontrada');
+      }
+
+      // Validar permisos: Solo el cliente dueño de la petición/carga puede confirmar
+      let clientId: string | null = null;
+      if (proposal.peticion) {
+        const peticion = await petRepo.findOne({
+          where: { id: proposal.peticion.id },
+          relations: ['cliente']
+        });
+        clientId = peticion?.cliente?.id ?? null;
+      } else if (proposal.carga) {
+        // Fallback para cargas tradicionales si aplica
+        clientId = (proposal.carga as any).clienteId ?? null;
+      }
+
+      const client = await clientRepo.findOne({ where: { user: { id: actor.id } } });
+      const isAdmin = actor.role?.name?.toLowerCase() === 'administrador';
+
+      if (!isAdmin && (!client || client.id !== clientId)) {
+        throw new ForbiddenException('No autorizado para confirmar esta asignación');
+      }
+
+      if (proposal.status !== 'accepted') {
+        throw new BadRequestException(
+          'Solo se pueden confirmar propuestas que han sido aceptadas por el transportista',
+        );
+      }
+
+      // Actualizar Proposal
+      proposal.status = 'confirmed';
+      await propRepo.save(proposal);
+
+      // Actualizar Petición asociada si existe
+      if (proposal.peticion) {
+        const peticion = await petRepo.findOne({ where: { id: proposal.peticion.id } });
+        if (peticion) {
+          peticion.status = 'asignada';
+          peticion.assignedProposal = proposal;
+          await petRepo.save(peticion);
+        }
+      }
+
+      // Notificar al transportista
+      try {
+        const prestatUserId = proposal.prestatario?.user?.id;
+        if (prestatUserId && this.notificationsService) {
+          const contextName = proposal.peticion?.nombreCarga || proposal.carga?.order_id || 'la solicitud';
+          await this.notificationsService.createNotification({
+            title: 'Asignación Confirmada',
+            message: `El cliente ha confirmado la asignación para ${contextName}.`,
+            type: NotificationType.PROPOSAL_CONFIRMED,
+            link: `/app/proposals/${proposal.id}`,
+            meta: { proposalId: proposal.id },
+            userTargetId: prestatUserId,
+            userOriginId: actor.id,
+          });
+        }
+      } catch (err) {
+        this.logger.warn('Fallo al enviar notificación de confirmación: ' + err);
+      }
+
+      return { ok: true, proposal };
+    });
   }
 
   /**

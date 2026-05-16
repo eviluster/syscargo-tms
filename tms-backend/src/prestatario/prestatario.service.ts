@@ -110,6 +110,35 @@ export class PrestatarioService {
       (dto as any).servicios_incluidos_alojamiento ??
       [];
 
+    // Precio terrestre
+    const precioTerrestrePorKm =
+      (dto as any).precioTerrestrePorKm ?? (dto as any).precio_terrestre_por_km;
+    const precioTerrestrePorCargaContenedor =
+      (dto as any).precioTerrestrePorCargaContenedor ??
+      (dto as any).precio_terrestre_por_carga_contenedor;
+    const precioTerrestrePorCargaGeneral =
+      (dto as any).precioTerrestrePorCargaGeneral ??
+      (dto as any).precio_terrestre_por_carga_general;
+
+    const precioTerrestre: any = {};
+    if (precioTerrestrePorKm !== undefined) {
+      precioTerrestre.precioPorKm = precioTerrestrePorKm;
+    }
+    if (
+      precioTerrestrePorCargaContenedor !== undefined ||
+      precioTerrestrePorCargaGeneral !== undefined
+    ) {
+      precioTerrestre.precioPorCarga = {};
+      if (precioTerrestrePorCargaContenedor !== undefined) {
+        precioTerrestre.precioPorCarga['contenedor'] =
+          precioTerrestrePorCargaContenedor;
+      }
+      if (precioTerrestrePorCargaGeneral !== undefined) {
+        precioTerrestre.precioPorCarga['carga_general'] =
+          precioTerrestrePorCargaGeneral;
+      }
+    }
+
     // Crear la entidad usando **camelCase** (coincide con tu entidad actual)
     const p = this.prestatarioRepo.create({
       user: user,
@@ -146,6 +175,10 @@ export class PrestatarioService {
       precioNochePromedio: precioNochePromedio,
       tipoHabitaciones: tipoHabitaciones,
       serviciosIncluidosAlojamiento: serviciosIncluidosAlojamiento,
+
+      // precio terrestre
+      precioTerrestre:
+        Object.keys(precioTerrestre).length > 0 ? precioTerrestre : null,
     } as any);
 
     console.log('Prestatario antes de guardar', p);
@@ -306,6 +339,34 @@ export class PrestatarioService {
       p.tipoHabitaciones = anyDto.tipoHabitaciones;
     if (anyDto.serviciosIncluidosAlojamiento !== undefined)
       p.serviciosIncluidosAlojamiento = anyDto.serviciosIncluidosAlojamiento;
+
+    // precio terrestre
+    const precioPorKm =
+      anyDto.precioTerrestrePorKm ?? anyDto.precio_terrestre_por_km;
+    const precioPorCargaContenedor =
+      anyDto.precioTerrestrePorCargaContenedor ??
+      anyDto.precio_terrestre_por_carga_contenedor;
+    const precioPorCargaGeneral =
+      anyDto.precioTerrestrePorCargaGeneral ??
+      anyDto.precio_terrestre_por_carga_general;
+
+    if (
+      precioPorKm !== undefined ||
+      precioPorCargaContenedor !== undefined ||
+      precioPorCargaGeneral !== undefined
+    ) {
+      const currentPrecio = p.precioTerrestre || {};
+      if (precioPorKm !== undefined) currentPrecio.precioPorKm = precioPorKm;
+      if (precioPorCargaContenedor !== undefined) {
+        currentPrecio.precioPorCarga = currentPrecio.precioPorCarga || {};
+        currentPrecio.precioPorCarga['contenedor'] = precioPorCargaContenedor;
+      }
+      if (precioPorCargaGeneral !== undefined) {
+        currentPrecio.precioPorCarga = currentPrecio.precioPorCarga || {};
+        currentPrecio.precioPorCarga['carga_general'] = precioPorCargaGeneral;
+      }
+      p.precioTerrestre = currentPrecio as any;
+    }
 
     await this.prestatarioRepo.save(p);
     return this.findOneById(id);

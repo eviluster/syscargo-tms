@@ -134,4 +134,15 @@ export class Prestatario extends BasicEntity {
 
   @Column({ type: 'jsonb', nullable: true })
   serviciosIncluidosAlojamiento?: string[] | null;
+
+  /**
+   * Precios personalizados para servicio terrestre
+   * precioTerrestrePorKm: precio por kilómetro recorrido
+   * precioTerrestrePorCarga: precios por tipo de carga (ej: contenedor, carga general)
+   */
+  @Column({ type: 'jsonb', nullable: true })
+  precioTerrestre?: {
+    precioPorKm?: number;
+    precioPorCarga?: Record<string, number>;
+  } | null;
 }

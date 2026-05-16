@@ -216,6 +216,32 @@
               </div>
             </div>
             <br />
+            <!-- Precios para servicio terrestre -->
+            <div v-if="formData.servicios.includes('terrestre')" class="border rounded p-3 mb-3">
+              <h6 class="mb-3">Precios para Servicio Terrestre</h6>
+              <div class="row g-2">
+                <div class="col-md-6 mb-3">
+                  <label class="fs-6 fw-semibold mb-2">Precio por Km (pesos)</label>
+                  <el-input
+                    v-model.number="formData.precioPorKm"
+                    type="number"
+                    placeholder="Ej: 1500"
+                    min="0"
+                  />
+                  <div class="text-muted fs-7">Precio que cobra por kilómetro recorrido</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="fs-6 fw-semibold mb-2">Precio por Carga/Contenedor (pesos)</label>
+                  <el-input
+                    v-model.number="formData.precioPorCarga"
+                    type="number"
+                    placeholder="Ej: 2500"
+                    min="0"
+                  />
+                  <div class="text-muted fs-7">Precio fijo por mover carga o contenedor</div>
+                </div>
+              </div>
+            </div>
             <!-- Transportes (repeatable) -->
             <div class="border rounded mb-3 p-3">
               <label class="fs-6 fw-semibold mb-2"
@@ -633,7 +659,11 @@ type FormValues = {
   rating: number | null;
   licencia: { numero: string; categoria: string; vence: string };
   ayudantes: Ayudante[];
-  servicios: string[]; // <-- nuevo
+  servicios: string[];
+  // precios terrestre (nuevo)
+  precioPorKm?: number | null;
+  precioPorCarga?: number | null;
+  precioPorContenedor?: number | null;
   // alquiler fields (nuevos)
   providesAlquiler?: boolean;
   metros_disponibles_alquiler?: number | null;
@@ -693,7 +723,10 @@ export default defineComponent({
       rating: null,
       licencia: { numero: "", categoria: "", vence: "" },
       ayudantes: [],
-      servicios: [], // inicial
+      servicios: [],
+      // precios terrestre defaults
+      precioPorKm: null,
+      precioPorCarga: null,
       // alquiler defaults
       providesAlquiler: false,
       metros_disponibles_alquiler: null,
@@ -998,8 +1031,18 @@ export default defineComponent({
             payload.altura_m_alquiler = null;
             payload.servicios_prest_alquiler = [];
           }
+
+          // precios terrestre: solo si se seleccionó servicio terrestre
+          if (formData.servicios.includes('terrestre')) {
+            if (formData.precioPorKm !== null && formData.precioPorKm !== undefined) {
+              payload.precioTerrestrePorKm = formData.precioPorKm;
+            }
+            if (formData.precioPorCarga !== null && formData.precioPorCarga !== undefined) {
+              payload.precioTerrestrePorCargaContenedor = formData.precioPorCarga;
+            }
+          }
         }
- 
+
         if (isCliente.value) {
           const clientObj = {
             company: formData.company,

@@ -33,12 +33,11 @@ async function bootstrap() {
     origin: ['https://admin.syscargo.cu', 'https://tms.syscargo.cu'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE','OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
-//     credentials: true, // habilita si usas cookies/sesiones
-    // preflightContinue: false,
-    // optionsSuccessStatus: 204,
+    exposedHeaders: ['Authorization'],
+    credentials: true, // habilita si usas cookies/sesiones
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
-
-
 
   const options = new DocumentBuilder()
     .setTitle('FIN AUTO')

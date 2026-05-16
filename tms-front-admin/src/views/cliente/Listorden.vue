@@ -1397,11 +1397,15 @@ export default defineComponent({
         // Calcular costo por volumen (100 CUP por m³)
         const volumen = selectedOrden.value.vol_bulto * 100;
 
-        // Calcular impuesto aeroportuario (7.70 CUP por kg)
-        const impuesto = selectedOrden.value.peso_total * 7.7;
-
         // Seleccionar el mayor entre costo por volumen y tarifa base
         const baseParaCalculos = Math.max(tarifabase, volumen);
+
+        // Verificar si la vía es aérea para aplicar impuesto aeroportuario
+        const esViaAerea = selectedOrden.value.via &&
+                          selectedOrden.value.via.toLowerCase() === 'aerea';
+
+        // Calcular impuesto aeroportuario (7.70 CUP por kg) solo si es vía aérea
+        const impuesto = esViaAerea ? selectedOrden.value.peso_total * 7.7 : 0;
 
         // Calcular subtotal (base seleccionada + impuesto)
         const subtotal = baseParaCalculos + impuesto;
@@ -1700,6 +1704,7 @@ export default defineComponent({
       doc.addImage(imgData, "PNG", 130, barcodeY + 5, 70, 20);
 
       // Desglose de precios (tercera tabla)
+      const esViaAerea = orden.via && orden.via.toLowerCase() === 'aerea';
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY + 10,
         head: [["Concepto", "Valor (CUP)"]],
@@ -1709,10 +1714,12 @@ export default defineComponent({
             "Costo por Volumen (100 CUP/m³)",
             orden.volumen?.toFixed(2) || "0.00",
           ],
-          [
-            "Impuesto Aeroportuario (7.70 CUP/kg)",
-            orden.impuesto?.toFixed(2) || "0.00",
-          ],
+          ...(esViaAerea ? [
+            [
+              "Impuesto Aeroportuario (7.70 CUP/kg)",
+              orden.impuesto?.toFixed(2) || "0.00",
+            ],
+          ] : []),
           ["Comisión del Servicio (5%)", orden.comision?.toFixed(2) || "0.00"],
           ["TOTAL A PAGAR", orden.precio.toFixed(2)],
         ],
@@ -1728,7 +1735,8 @@ export default defineComponent({
         },
         didDrawCell: (data) => {
           // Resaltar la fila de TOTAL
-          if (data.section === "body" && data.row.index === 4) {
+          const totalRowIndex = esViaAerea ? 4 : 3;
+          if (data.section === "body" && data.row.index === totalRowIndex) {
             doc.setFillColor(41, 128, 185);
             doc.setTextColor(255, 255, 255);
             doc.setFont("helvetica", "bold");

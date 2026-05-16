@@ -1025,6 +1025,18 @@ const routes: Array<RouteRecordRaw> = [
           ],
         },
       },
+      // ---------Gestión de Precios por Prestatario ------------------
+      {
+        path: "/prestatario/mis-precios",
+        name: "PrestatarioMisPrecios",
+        component: () =>
+          import("@/views/prestatario/MisPrecios.vue"),
+        meta: {
+          pageTitle: "Mis Precios",
+          breadcrumbs: ["Prestatario", "Mis Precios"],
+          requiresAuth: true,
+        },
+      },
       // ---------Servicios de prestatarios nuevos ------------------
       // router/index.ts (fragmento — añade al array `routes`)
       {

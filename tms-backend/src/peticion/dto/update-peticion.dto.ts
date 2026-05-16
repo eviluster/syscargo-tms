@@ -29,4 +29,20 @@ export class UpdatePeticionDto {
   @IsOptional()
   @IsString()
   tipoCarga?: string;
+
+  @IsOptional()
+  @IsString()
+  via?: string;
+
+  @IsOptional()
+  @IsString()
+  origenDireccion?: string;
+
+  @IsOptional()
+  @IsString()
+  destinoDireccion?: string;
+
+  @IsOptional()
+  @IsNumber()
+  distanciaKm?: number;
 }

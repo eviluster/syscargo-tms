@@ -197,4 +197,22 @@ export class CreatePrestatarioDto {
   @IsArray()
   @IsString({ each: true })
   serviciosIncluidosAlojamiento?: string[];
+
+  // ---------------------
+  // Precio Terrestre (camelCase)
+  // ---------------------
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  precioTerrestrePorKm?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  precioTerrestrePorCargaContenedor?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  precioTerrestrePorCargaGeneral?: number;
 }

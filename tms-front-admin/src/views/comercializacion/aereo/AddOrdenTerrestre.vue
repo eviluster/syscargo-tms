@@ -854,6 +854,7 @@ export default defineComponent({
       console.log(schema);
       await origenStore.fetchOrigens();
       await destinoStore.fetchDestinos();
+      await transportistasStore.fetchTransportistas();
 
       // recalcular fecha de emisión por si la página se abrió antes de medianoche
       initialValues.fecha_emision = todayForDateInput();
