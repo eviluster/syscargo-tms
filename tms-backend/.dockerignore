@@ -1,0 +1,61 @@
+# ============================================================================
+# .dockerignore para tms-backend
+# Reduce tamaño de build context y acelera COPY
+# ============================================================================
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (se instalan dentro del Dockerfile)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+dist
+build
+*.tsbuildinfo
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
+*.lcov
+jest.results.json
+.mocharc.json
+
+# Env local
+.env
+.env.local
+.env.*.local
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Documentation
+README.md
+CHANGELOG.md
+docs/
+
+# Misc
+.prettierignore
+.eslintignore
+tsconfig.build.json
+nest-cli.json

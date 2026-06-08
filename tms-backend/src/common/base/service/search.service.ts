@@ -6,7 +6,7 @@ import {
   FilterCondition, 
   SortCondition, 
   FieldSelection
-} from '../../base/graphql/types/search.types';
+} from '../graphql/types/search.types';
 
 @Injectable()
 export class SearchService {

@@ -1,21 +1,187 @@
-import { Entity, Column, OneToMany } from 'typeorm';
-import { BasicInformationEntity } from 'src/common/base/entities';
-import { Prestatarioserv } from 'src/prestatarioserv/entities/prestatarioserv.entity';
+// src/prestatario/entities/prestatario.entity.ts
+import {
+  Entity,
+  Column,
+  OneToOne,
+  JoinColumn,
+  Index,
+  OneToMany,
+} from 'typeorm';
+import { BasicEntity } from 'src/common/base/entities/basic.entity';
+import { User } from 'src/user/entities/user.entity';
+import { ViaMode } from 'src/carga/enum/vias';
+import { Solicitud } from 'src/solicitudes/solicitudes.entity';
+
+export enum TipoCarga {
+  SECO = 'Seco',
+  REFRIGERADO = 'Refrigerado',
+  CARGA_GENERAL = 'Carga general',
+}
+export enum Contenedor {
+  C20 = '20',
+  C40 = '40',
+}
 
 @Entity('prestatario')
-export class Prestatario extends BasicInformationEntity {
-  @Column({ unique: true })
-  correo: string;
+export class Prestatario extends BasicEntity {
+  @Column({ nullable: true })
+  name: string;
 
-  @Column()
-  address: string;
+  @OneToOne(() => User, { eager: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user' })
+  @Index({ unique: true })
+  user: User;
 
-  @Column()
-  municipality_id: string;
+  @Column({ type: 'enum', enum: TipoCarga, nullable: true })
+  tipoCarga?: TipoCarga;
 
-  @Column()
-  telef: string;
+  @Column({ type: 'enum', enum: Contenedor, nullable: true })
+  contenedor?: Contenedor;
 
-@OneToMany(() => Prestatarioserv, (prestatarioserv) => prestatarioserv.prestatario)
-servicios: Prestatarioserv[];
+  // transportes, ayudantes, etc como jsonb
+  @Column({ type: 'jsonb', nullable: true })
+  transportes?: Array<{
+    nombreChofer?: string;
+    chapa?: string;
+    tipoTransporte?: string;
+  }>;
+
+  @Column({ type: 'jsonb', nullable: true })
+  ayudantes?: Array<{ nombre?: string; apellidos?: string; ci?: string }>;
+
+  @Column({ type: 'jsonb', nullable: true })
+  cargasEspeciales?: string[];
+
+  @Column({ type: 'float', nullable: true })
+  rating?: number;
+
+  @Column({ type: 'jsonb', nullable: true })
+  licencia?: { numero: string; categoria: string; vence: string };
+
+  /**
+   * Capacity fields
+   */
+  @Column({ type: 'numeric', nullable: true })
+  maxWeight?: number;
+
+  @Column({ type: 'numeric', nullable: true })
+  maxVolume?: number;
+
+  @Column({ type: 'enum', enum: ViaMode, array: true, nullable: true })
+  servicios?: ViaMode[];
+
+  @Column({ type: 'text', nullable: true })
+  conditions?: string;
+
+  /**
+   * Relación inversa: las solicitudes asignadas al prestatario
+   */
+  @OneToMany(() => Solicitud, (s) => s.assignedPrestatario, { nullable: true })
+  solicitudes?: Solicitud[];
+
+  /* ---------------------------
+     Campos añadidos (camelCase)
+     --------------------------- */
+
+  // Alquiler
+  @Column({ type: 'numeric', nullable: true })
+  metrosDisponiblesAlquiler?: number | null;
+
+  @Column({ type: 'numeric', nullable: true })
+  alturaMAlquiler?: number | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  serviciosPrestAlquiler?: string[] | null;
+
+  // Talleres
+  @Column({ type: 'numeric', nullable: true })
+  talleresNumTecnicos?: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  talleresHorario?: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  talleresServicios?: string[] | null;
+
+  @Column({ type: 'numeric', nullable: true })
+  talleresCapacidadVehiculos?: number | null;
+
+  // GPS
+  @Column({ type: 'jsonb', nullable: true })
+  gpsProviders?: string[] | null;
+
+  @Column({ type: 'numeric', nullable: true })
+  gpsDevicesAvailable?: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  gpsPlans?: string | null;
+
+  @Column({ type: 'boolean', default: false })
+  gpsIntegrationApi?: boolean;
+
+  // Alojamiento
+  @Column({ type: 'numeric', nullable: true })
+  habitacionesDisponibles?: number | null;
+
+  @Column({ type: 'numeric', nullable: true })
+  capacidadPersonas?: number | null;
+
+  @Column({ type: 'numeric', nullable: true })
+  precioNochePromedio?: number | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  tipoHabitaciones?: string[] | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  serviciosIncluidosAlojamiento?: string[] | null;
+
+  /**
+   * Precios personalizados para servicio terrestre
+   * precioTerrestrePorKm: precio por kilómetro recorrido
+   * precioTerrestrePorCarga: precios por tipo de carga (ej: contenedor, carga general)
+   */
+  @Column({ type: 'jsonb', nullable: true })
+  precioTerrestre?: {
+    precioPorKm?: number;
+    precioPorCarga?: Record<string, number>;
+  } | null;
+
+  /**
+   * Campos adicionales para el perfil del prestatario (cálculos de oferta)
+   */
+
+  // Cantidad de camiones y consumo de gasolina
+  @Column({ type: 'numeric', nullable: true })
+  cantidadCamiones?: number | null;
+
+  @Column({ type: 'numeric', nullable: true })
+  consumoGasolina?: number | null; // Consumo promedio por km o por viaje
+
+  // Tipos de vehículos disponibles
+  @Column({ type: 'jsonb', nullable: true })
+  tiposVehiculos?: string[] | null; // ['contenerizados', 'carga general', 'freezer', 'cubicaje', 'triciclos', 'abiertos', 'cerrados']
+
+  // Capacidad de carga por tipo de vehículo
+  @Column({ type: 'jsonb', nullable: true })
+  capacidadPorTipo?: Record<string, { maxWeight?: number; maxVolume?: number }> | null;
+
+  // Disponibilidad (estado y fechas)
+  @Column({ type: 'boolean', default: true })
+  disponible?: boolean;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  disponibilidadDesde?: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  disponibilidadHasta?: Date | null;
+
+  // Zona de cobertura geográfica
+  @Column({ type: 'jsonb', nullable: true })
+  zonaCobertura?: {
+    provincias?: string[];
+    municipios?: string[];
+    regiones?: string[];
+    radioKm?: number;
+    coordenadas?: { lat: number; lng: number };
+  } | null;
 }

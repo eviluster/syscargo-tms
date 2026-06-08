@@ -1,27 +1,56 @@
 import { Notification } from 'src/notifications/entities/notification.entity';
-import {
-  Entity,
-  Column,
-  OneToMany,
-} from 'typeorm';
-import { UserRole } from 'src/user-roles/entities/user-role.entity';
+import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { BasicEntity } from 'src/common/base/entities/basic.entity';
+import { Role } from 'src/roles/entities/role.entity';
 
+export enum TipoCarga {
+  SECO = 'Seco',
+  REFRIGERADO = 'Refrigerado',
+  CARGA_GENERAL = 'Carga general',
+}
+
+export enum Contenedor {
+  C20 = '20',
+  C40 = '40',
+}
+
+/**
+ * Estructuras simples para tipado local.
+ * Si prefieres importarlas desde DTOs o desde un fichero shared, podemos moverlas.
+ */
+export type TransporteStructure = {
+  nombreChofer?: string;
+  chapa?: string;
+  tipoTransporte?: string;
+};
+
+export type LicenciaStructure = {
+  numero?: string;
+  categoria?: string;
+  vence?: string; // ISO string YYYY-MM-DD
+};
+
+export type AyudanteStructure = {
+  nombre?: string;
+  apellidos?: string;
+  ci?: string;
+};
 
 @Entity('users')
 export class User extends BasicEntity {
-  @Column()
-  name: string
-  @Column({ nullable: false })
+  @Column({ nullable: true })
+  name: string;
+
+  @Column({ nullable: true })
   hash: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   email: string;
 
   @Column({ nullable: true })
   description: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   username: string;
 
   @Column({ nullable: true })
@@ -29,7 +58,7 @@ export class User extends BasicEntity {
 
   @Column({ nullable: true })
   phone: string;
-  
+
   @Column({ nullable: true })
   photo: string;
 
@@ -38,9 +67,13 @@ export class User extends BasicEntity {
   })
   notifyOrigin: Notification[];
 
+  @ManyToOne(() => Role, (role) => role.users, { eager: true })
+  @JoinColumn({ name: 'role' })
+  role: Role;
 
-  @OneToMany(() => UserRole,(userRoles)=> userRoles.user,{
-    cascade: true
-  })
-  userRoles: UserRole[]
+  @Column({ nullable: true, default: false })
+  isLogged: boolean;
+
+  @Column({ nullable: true })
+  comercial_code: number;
 }

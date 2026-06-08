@@ -1,4 +1,4 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Column, OneToMany } from 'typeorm';
 import { BasicInformationEntity } from 'src/common/base/entities';
 import { CalendarStateEnum } from '../enum/calendar-day.enum';
 
@@ -16,9 +16,12 @@ export class Calendar extends BasicInformationEntity {
   @Column()
   fullDay: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   user: string;
 
   @Column()
   state: CalendarStateEnum;
+
+  @Column({ nullable: true })
+  isService: boolean;
 }

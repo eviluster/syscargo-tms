@@ -1,31 +1,37 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsEnum, IsNotEmpty, IsString, IsUUID } from "class-validator";
-import { type } from "os";
-import { RelationalDto } from "src/common/base/dto";
-import { DestinationType } from "src/common/base/types/destination.type";
-import { notifyEnum } from "src/common/enum/notify.enum";
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsUUID,
+} from 'class-validator';
+import { NotificationType } from '../entities/notification.entity';
 
 export class CreateNotificationDto {
-    @ApiProperty()
-    @IsString()
-    @IsUUID()
-    @IsNotEmpty()
-    userOrigin: RelationalDto
+  @IsNotEmpty()
+  @IsString()
+  title: string;
 
-    @ApiProperty({})
-    @IsEnum(notifyEnum)
-    @IsNotEmpty()
-    destinyType: notifyEnum
+  @IsOptional()
+  @IsString()
+  message?: string;
 
-    @ApiProperty({
-        isArray:true
-    })
-    @IsArray()
-    destinyUser: DestinationType[]
+  @IsOptional()
+  @IsEnum(NotificationType)
+  type?: NotificationType;
 
-    @ApiProperty({
-            type:String
-        }
-    )
-    message: string
+  @IsOptional()
+  @IsString()
+  link?: string;
+
+  @IsOptional()
+  meta?: any;
+
+  @IsNotEmpty()
+  @IsUUID()
+  userTargetId: string;
+
+  @IsOptional()
+  @IsUUID()
+  userOriginId?: string;
 }

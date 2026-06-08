@@ -3,9 +3,9 @@
 /node_modules
 /build
 /scripts
-src/main.ts
-typeorm.config.ts
-ormconfig.ts
+#src/main.ts
+#typeorm.config.ts
+#ormconfig.ts
 
 # Logs
 logs

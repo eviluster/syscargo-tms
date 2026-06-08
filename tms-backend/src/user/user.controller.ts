@@ -10,20 +10,22 @@ import {
   Put,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
-import { GetUserAdmin } from '../auth/decorator';
+import { GetUserAdmin, GetUserServices, GetUser } from '../auth/decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 
-@UseGuards(JwtGuard)
 @ApiTags('Users')
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}
 
+  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   @Get('all')
   @ApiResponse({
@@ -38,7 +40,23 @@ export class UserController {
 
   @HttpCode(HttpStatus.OK)
   @Post('/adduser')
-  async addUser(@GetUserAdmin() user: User, @Body() dto: CreateUserDto) {
+  async addUser(user: User, @Body() dto: CreateUserDto) {
+    return this.userService.createUser(dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('/adduser/out')
+  async addUserOut(user: User, @Body() dto: CreateUserDto) {
+    return this.userService.createUser(dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('/adduser/prestatario')
+  async addUserPrestatario(
+    @GetUserAdmin() user: User,
+    @Body() dto: CreateUserDto,
+  ) {
+    // opcional: aquí podrías verificar que dto.role corresponde al rol "prestatario"
     return this.userService.createUser(dto);
   }
 
@@ -50,15 +68,19 @@ export class UserController {
   ) {
     return this.userService.findOneById(userId);
   }
+
+  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   @Put('edit/:userId')
-  // async editUser(
-  //     @GetUserAdmin() user: User,
-  //     @Param('userId',ParseIntPipe) userId: number,
-  //      @Body() dto: UpdateUserDto
-  // ){
-  //     return this.userService.editUser(userId,dto);
-  // }
+  async editUser(
+    @GetUser() user: User,
+    @Param('userId') userId: string,
+    @Body() dto: UpdateUserDto,
+  ) {
+    return this.userService.editUser(userId, dto);
+  }
+
+  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   @Delete('delete/:userId')
   async deleteUser(

@@ -1,27 +1,106 @@
-import { ApiProperty } from '@nestjs/swagger/dist/decorators/api-property.decorator';
-import { IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, IsUUID } from 'class-validator';
+// create-user.dto.ts
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  IsStrongPassword,
+  IsUUID,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  Min,
+  Max,
+  IsDateString,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+export enum TipoCarga {
+  SECO = 'Seco',
+  REFRIGERADO = 'Refrigerado',
+  CARGA_GENERAL = 'Carga general',
+}
+
+export enum Contenedor {
+  C20 = '20',
+  C40 = '40',
+}
+
+export class TransporteDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  nombreChofer: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  chapa: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  tipoTransporte: string;
+}
+
+export class LicenciaDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  numero: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  categoria: string;
+
+  @ApiProperty({
+    description: 'Fecha de vencimiento en formato ISO (YYYY-MM-DD)',
+  })
+  @IsDateString()
+  @IsNotEmpty()
+  vence: string;
+}
+
+export class AyudanteDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  nombre: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  apellidos: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  ci: string;
+}
 
 export class CreateUserDto {
-
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
   name: string;
-  
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
   lastname: string;
-  
+
   @ApiProperty()
-  @IsPhoneNumber()
+  @IsPhoneNumber(null)
   @IsNotEmpty()
   phone: string;
-  
+
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
-  description: string;
+  @IsOptional()
+  description?: string;
 
   @ApiProperty()
   @IsString()
@@ -33,7 +112,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Contraseña con complejidad fuerte' })
   @IsNotEmpty()
   @IsString()
   @IsStrongPassword(
@@ -50,10 +129,12 @@ export class CreateUserDto {
   )
   password: string;
 
+  @ApiProperty({ description: 'UUID del rol (opcional)' })
   @IsString()
   @IsUUID()
   @IsOptional()
   role?: string;
 
+  // campo interno (hash), no validación ni ApiProperty obligatorio
   hash?: string;
 }

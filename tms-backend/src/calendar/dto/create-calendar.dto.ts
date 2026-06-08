@@ -1,10 +1,19 @@
-import { IsNotEmpty, IsString, IsNumber, IsBoolean, IsDate, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  IsNumber,
+  IsBoolean,
+  IsDate,
+  IsDateString,
+  IsOptional,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseExtendedDto } from 'src/common/base/dto/base.dto';
 
 export class CreateCalendarDto extends BaseExtendedDto {
   @IsNotEmpty()
-  @IsDate()
+  @IsDateString()
   fecha: Date;
 
   @IsNotEmpty()
@@ -19,11 +28,16 @@ export class CreateCalendarDto extends BaseExtendedDto {
   @IsBoolean()
   fullDay: boolean;
 
-  @IsNotEmpty()
+  @IsUUID()
   @IsString()
-  user: string;
+  @IsOptional()
+  user?: string;
 
   @IsNotEmpty()
   @IsString()
   state: string;
+
+  @IsNotEmpty()
+  @IsBoolean()
+  isService: boolean;
 }

@@ -42,8 +42,13 @@ import { CalendarModule } from './calendar/calendar.module';
 import { CargaModule } from './carga/carga.module';
 import { DoccargaModule } from './doccarga/doccarga.module';
 import { PrestatarioservModule } from './prestatarioserv/prestatarioserv.module';
-
-
+import { ClientModule } from './cliente/cliente.module';
+import { ProposalsModule } from './proposal/proposal.module';
+import { SettingsModule } from './settings/settings.module';
+import { SolicitudesModule } from './solicitudes/solicitudes.module';
+import { ProposalsAlquilerModule } from './proposals_alquiler/proposal-alquiler.module';
+import { ProposalsServicesModule } from './proposals_services/proposal-service.module';
+import { PeticionModule } from './peticion/peticion.module';
 
 @Module({
   imports: [
@@ -93,7 +98,13 @@ import { PrestatarioservModule } from './prestatarioserv/prestatarioserv.module'
     CargaModule,
     DoccargaModule,
     PrestatarioservModule,
-    
+    ProposalsModule,
+    ClientModule,
+    SettingsModule,
+    SolicitudesModule,
+    ProposalsAlquilerModule,
+    ProposalsServicesModule,
+    PeticionModule,
   ],
   controllers: [],
   providers: [],

@@ -4,7 +4,7 @@ import { Carga } from 'src/carga/entities/carga.entity';
 
 @Entity('doccarga')
 export class Doccarga extends BasicInformationEntity {
-  @ManyToOne(() => Carga, (carga) => carga.doccargas, {eager: true, nullable:false})
+  @ManyToOne(() => Carga, (carga) => carga.doccargas, {eager: true, nullable:true})
   @JoinColumn({ name: 'carga' })
   carga: Carga;
 

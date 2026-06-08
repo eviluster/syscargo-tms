@@ -1,0 +1,6 @@
+export enum EstadoPago {
+    REGISTRADO = 'REGISTRADO',
+    EN_PROCESO = 'EN_PROCESO', 
+    RECHAZADO = 'RECHAZADO',
+    ACEPTADO = 'ACEPTADO'
+}

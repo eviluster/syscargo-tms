@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ConditionDto } from './condition.dto';
 import { FindOptionsOrderValue, Repository } from 'typeorm';
 import { orderEnum } from '../../enum/order.enum';
-import { fieldsEnum } from '../../../common/enum/fields.enum';
+import { fieldsEnum } from '../../enum/fields.enum';
 import { IsArray, IsInt, IsOptional, Min } from 'class-validator';
 import { SearchFieldDto } from '../utils/Builder/class/fields.dto';
 import { type } from 'os';

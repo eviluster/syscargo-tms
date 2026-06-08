@@ -22,7 +22,7 @@ UpdateCalendarDto> {
     return super.findAllItems();
   }
 
-  override async create(createDto:CreateCalendarDto) {
+  override async create(createDto: CreateCalendarDto) {
     return super.create(createDto);
   }
 
