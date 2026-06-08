@@ -16,14 +16,20 @@
         <!--begin::Username-->
         <div class="d-flex flex-column">
           <div class="fw-bold d-flex align-items-center fs-5">
-            Max Smith
+            <span v-if="userData">
+              {{ userData.name }}
+            </span>
+
             <span class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2"
               >Pro</span
             >
           </div>
-          <a href="#" class="fw-semibold text-muted text-hover-primary fs-7"
-            >max@kt.com</a
+          <span
+            class="fw-semibold text-muted text-hover-primary fs-7"
+            v-if="userData"
           >
+            {{ userData.email }}
+          </span>
         </div>
         <!--end::Username-->
       </div>
@@ -36,261 +42,25 @@
 
     <!--begin::Menu item-->
     <div class="menu-item px-5">
-      <router-link to="/pages/profile/overview" class="menu-link px-5">
-        My Profile
+      <router-link to="/crafted/account/overview" class="menu-link px-5">
+        Mi Perfil
       </router-link>
-    </div>
-    <!--end::Menu item-->
-
-    <!--begin::Menu item-->
-    <div class="menu-item px-5">
-      <router-link to="/pages/profile/overview" class="menu-link px-5">
-        <span class="menu-text">My Projects</span>
-        <span class="menu-badge">
-          <span class="badge badge-light-danger badge-circle fw-bold fs-7"
-            >3</span
-          >
-        </span>
-      </router-link>
-    </div>
-    <!--end::Menu item-->
-
-    <!--begin::Menu item-->
-    <div
-      class="menu-item px-5"
-      data-kt-menu-trigger="hover"
-      data-kt-menu-placement="left-start"
-      data-kt-menu-flip="center, top"
-    >
-      <router-link to="/pages/profile/overview" class="menu-link px-5">
-        <span class="menu-title">My Subscription</span>
-        <span class="menu-arrow"></span>
-      </router-link>
-
-      <!--begin::Menu sub-->
-      <div class="menu-sub menu-sub-dropdown w-175px py-4">
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <router-link to="/pages/profile/overview" class="menu-link px-5">
-            Referrals
-          </router-link>
-        </div>
-        <!--end::Menu item-->
-
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <router-link to="/pages/profile/overview" class="menu-link px-5">
-            Billing
-          </router-link>
-        </div>
-        <!--end::Menu item-->
-
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <router-link to="/pages/profile/overview" class="menu-link px-5">
-            Payments
-          </router-link>
-        </div>
-        <!--end::Menu item-->
-
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <router-link
-            to="/pages/profile/overview"
-            class="menu-link d-flex flex-stack px-5"
-          >
-            Statements
-
-            <i
-              class="fas fa-exclamation-circle ms-2 fs-7"
-              data-bs-toggle="tooltip"
-              title="View your statements"
-            ></i>
-          </router-link>
-        </div>
-        <!--end::Menu item-->
-
-        <!--begin::Menu separator-->
-        <div class="separator my-2"></div>
-        <!--end::Menu separator-->
-
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <div class="menu-content px-3">
-            <label
-              class="form-check form-switch form-check-custom form-check-solid"
-            >
-              <input
-                class="form-check-input w-30px h-20px"
-                type="checkbox"
-                value="1"
-                checked
-                name="notifications"
-              />
-              <span class="form-check-label text-muted fs-7">
-                Notifications
-              </span>
-            </label>
-          </div>
-        </div>
-        <!--end::Menu item-->
-      </div>
-      <!--end::Menu sub-->
-    </div>
-    <!--end::Menu item-->
-
-    <!--begin::Menu item-->
-    <div class="menu-item px-5">
-      <router-link to="/pages/profile/overview" class="menu-link px-5">
-        My Statements
-      </router-link>
-    </div>
-    <!--end::Menu item-->
-
-    <!--begin::Menu separator-->
-    <div class="separator my-2"></div>
-    <!--end::Menu separator-->
-
-    <!--begin::Menu item-->
-    <div
-      class="menu-item px-5"
-      data-kt-menu-trigger="hover"
-      data-kt-menu-placement="left-start"
-      data-kt-menu-flip="center, top"
-    >
-      <router-link to="/pages/profile/overview" class="menu-link px-5">
-        <span class="menu-title position-relative">
-          Language
-          <span
-            class="fs-8 rounded bg-light px-3 py-2 position-absolute translate-middle-y top-50 end-0"
-          >
-            {{ currentLangugeLocale.name }}
-            <img
-              class="w-15px h-15px rounded-1 ms-2"
-              :src="currentLangugeLocale.flag"
-              alt="metronic"
-            />
-          </span>
-        </span>
-      </router-link>
-
-      <!--begin::Menu sub-->
-      <div class="menu-sub menu-sub-dropdown w-175px py-4">
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <a
-            @click="setLang('en')"
-            href="#"
-            class="menu-link d-flex px-5"
-            :class="{ active: currentLanguage === 'en' }"
-          >
-            <span class="symbol symbol-20px me-4">
-              <img
-                class="rounded-1"
-                :src="getAssetPath('media/flags/united-states.svg')"
-                alt="metronic"
-              />
-            </span>
-            English
-          </a>
-        </div>
-        <!--end::Menu item-->
-
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <a
-            @click="setLang('es')"
-            href="#"
-            class="menu-link d-flex px-5"
-            :class="{ active: currentLanguage === 'es' }"
-          >
-            <span class="symbol symbol-20px me-4">
-              <img
-                class="rounded-1"
-                :src="getAssetPath('media/flags/spain.svg')"
-                alt="metronic"
-              />
-            </span>
-            Spanish
-          </a>
-        </div>
-        <!--end::Menu item-->
-
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <a
-            @click="setLang('de')"
-            href="#"
-            class="menu-link d-flex px-5"
-            :class="{ active: currentLanguage === 'de' }"
-          >
-            <span class="symbol symbol-20px me-4">
-              <img
-                class="rounded-1"
-                :src="getAssetPath('media/flags/germany.svg')"
-                alt="metronic"
-              />
-            </span>
-            German
-          </a>
-        </div>
-        <!--end::Menu item-->
-
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <a
-            @click="setLang('ja')"
-            href="#"
-            class="menu-link d-flex px-5"
-            :class="{ active: currentLanguage === 'ja' }"
-          >
-            <span class="symbol symbol-20px me-4">
-              <img
-                class="rounded-1"
-                :src="getAssetPath('media/flags/japan.svg')"
-                alt="metronic"
-              />
-            </span>
-            Japanese
-          </a>
-        </div>
-        <!--end::Menu item-->
-
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <a
-            @click="setLang('fr')"
-            href="#"
-            class="menu-link d-flex px-5"
-            :class="{ active: currentLanguage === 'fr' }"
-          >
-            <span class="symbol symbol-20px me-4">
-              <img
-                class="rounded-1"
-                :src="getAssetPath('media/flags/france.svg')"
-                alt="metronic"
-              />
-            </span>
-            French
-          </a>
-        </div>
-        <!--end::Menu item-->
-      </div>
-      <!--end::Menu sub-->
     </div>
     <!--end::Menu item-->
 
     <!--begin::Menu item-->
     <div class="menu-item px-5 my-1">
-      <router-link to="/pages/profile/overview" class="menu-link px-5">
+      <!-- <router-link to="/pages/profile/overview" class="menu-link px-5">
         Account Settings
-      </router-link>
+      </router-link> -->
     </div>
     <!--end::Menu item-->
 
     <!--begin::Menu item-->
     <div class="menu-item px-5">
-      <a @click="signOut()" class="menu-link px-5"> Sign Out </a>
+      <a @click="signOut(userData.userID)" class="menu-link px-5">
+        Cerrar sesión
+      </a>
     </div>
     <!--end::Menu item-->
   </div>
@@ -299,10 +69,12 @@
 
 <script lang="ts">
 import { getAssetPath } from "@/core/helpers/assets";
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
+import { useCookies } from "vue3-cookies";
+import api from "@/services/api";
 
 export default defineComponent({
   name: "kt-user-menu",
@@ -310,8 +82,9 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const i18n = useI18n();
-    const store = useAuthStore();
-
+    const auth = useAuthStore();
+    const { cookies } = useCookies();
+    const userData = ref();
     i18n.locale.value = localStorage.getItem("lang")
       ? (localStorage.getItem("lang") as string)
       : "en";
@@ -338,9 +111,15 @@ export default defineComponent({
         name: "French",
       },
     };
+    onMounted(() => {
+      userData.value = cookies.get("userData");
+    });
 
-    const signOut = () => {
-      store.logout();
+    const signOut = async (id: string) => {
+      console.log("ID del usuario a desloguear", id);
+
+      await api.post("/auth/log-out", { id: id });
+      cookies.remove("refresh_token", "/", "");
       router.push({ name: "sign-in" });
     };
 
@@ -363,6 +142,7 @@ export default defineComponent({
       currentLanguage,
       currentLangugeLocale,
       countries,
+      userData,
       getAssetPath,
     };
   },

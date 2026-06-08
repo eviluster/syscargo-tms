@@ -1,5 +1,21 @@
 <template>
-  <v-carousel hide-delimiters cycle height="800" v-model="currentSlide">
+  <v-carousel
+    hide-delimiters
+    cycle
+    height="800"
+    v-model="currentSlide"
+    style="
+      background: linear-gradient(
+        100deg,
+        rgb(8, 12, 36) 30.27%,
+        rgba(8, 12, 36, 0.97) 49.06%,
+        rgba(8, 12, 36, 0.91) 70.25%,
+        rgba(8, 12, 36, 0.83) 80.56%,
+        rgba(8, 12, 36, 0.71) 100.4%,
+        rgba(8, 12, 36, 0) 80.4%
+      );
+    "
+  >
     <!-- Botón Anterior -->
     <template v-slot:prev="{ props }">
       <div class="ellipse-container">
@@ -28,13 +44,7 @@
       </div>
     </template>
 
-    <v-carousel-item
-      v-for="(item, index) in slides"
-      :key="index"
-      :src="item.image"
-      cover
-      class="carousel-item"
-    >
+    <v-carousel-item v-for="item in slides" :key="item.id" cover class="carousel-item">
       <v-container max-width="1055" class="customPA">
         <h2 class="customT pb-5">
           {{ item.title }}
@@ -43,13 +53,21 @@
           {{ item.subtitle }}
         </p>
         <div class="pt-5">
-          <v-btn class="text-none text-subtitle-1 mr-4" color="#ea950e" variant="flat" size="large">
-            Nuestros Servicios
-          </v-btn>
-
-          <v-btn class="text-none text-subtitle-1" color="white" variant="flat" size="large"
-            >Contáctenos
-          </v-btn>
+          <router-link to="/services">
+            <v-btn
+              class="text-none text-subtitle-1 mr-4"
+              color="#ea950e"
+              variant="flat"
+              size="large"
+            >
+              Nuestros Servicios
+            </v-btn>
+          </router-link>
+          <router-link to="/contact">
+            <v-btn class="text-none text-subtitle-1" color="white" variant="flat" size="large">
+              Contáctenos
+            </v-btn>
+          </router-link>
         </div>
       </v-container>
     </v-carousel-item>
@@ -61,13 +79,8 @@ import { ref } from 'vue'
 const currentSlide = ref(0)
 const slides = ref([
   {
-    image: '/src/assets/sliderback.png', // Reemplaza con tu imagen
-    title: 'ÚNICA DE SU TIPO EN CUBA & EL MEJOR SERVICIO DE TRANSPORTE DE CARGA',
-    subtitle:
-      'Servicio de transporte de carga hacia Cuba tanto aéreo como marítimo con calidad, rapidez y profesionalismo.',
-  },
-  {
-    image: '/src/assets/sliderback.png', // Reemplaza con tu imagen
+    id: 1,
+    //image: '/sliderback.png', // Reemplaza con tu imagen
     title: 'ÚNICA DE SU TIPO EN CUBA & EL MEJOR SERVICIO DE TRANSPORTE DE CARGA',
     subtitle:
       'Servicio de transporte de carga hacia Cuba tanto aéreo como marítimo con calidad, rapidez y profesionalismo.',

@@ -274,9 +274,7 @@
 import { defineComponent, computed, ref, onMounted } from "vue";
 import KTDatatable from "@/components/kt-datatable/KTDataTable.vue";
 import { useTransportistasStore } from "@/stores/transportistas";
-import transportistas, {
-  type ITransportistas,
-} from "@/core/data/transportistas";
+import type { ITransportistas } from "@/core/data/transportistas";
 import type { Sort } from "@/components/kt-datatable/table-partials/models";
 import arraySort from "array-sort";
 import { Modal } from "bootstrap";
@@ -309,7 +307,8 @@ export default defineComponent({
     });
     const isEditable = ref(false);
 
-    onMounted(() => {
+    onMounted(async () => {
+      await transportistasStore.fetchTransportistas();
       initTransportistas.value.splice(
         0,
         transportistas.value.length,

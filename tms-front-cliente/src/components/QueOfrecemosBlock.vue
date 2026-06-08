@@ -6,7 +6,22 @@
           <v-col cols="12" class="text-center">
             <div class="feature-title">
               <div class="d-flex flex-column">
-                <v-img src="/src/assets/rect2.png" height="46" max-width="142"></v-img>
+                <v-img src="/planout.png" height="54" max-width="195" class="d-flex align-center">
+                  <h2
+                    class=""
+                    style="
+                      font-size: 16px;
+                      line-height: 26px;
+                      font-weight: 600;
+                      font-family: 'Public Sans';
+                      color: #ea950e;
+                      text-align: center;
+                      display: inline-block;
+                    "
+                  >
+                    CARACTERÍSTICAS
+                  </h2>
+                </v-img>
 
                 <h2 class="text-h4 font-weight-bold QO pt-6">¿QUE OFRECEMOS?</h2>
               </div>
@@ -18,9 +33,9 @@
               ></v-divider>
               <div style="width: 478px">
                 <p class="text-muted QOS">
-                  Collaboratively customize front-end materials with standardized infomediaries.
-                  Holistically engineer performance based value. Assertively benchmark turnkey
-                  web-readiness rather than long.
+                  En SysCargo, entregamos más que paquetes: entregamos soluciones. Con una red de
+                  transporte eficiente y tecnología de seguimiento en tiempo real, garantizamos que
+                  tu carga llegue a tiempo, intacta y con la máxima seguridad.
                 </p>
               </div>
             </div>
@@ -138,18 +153,22 @@ const slides = ref([
   width: 70px;
   height: 70px;
 }
+
 .bg-light-orange {
   background-color: #ea960e32;
   color: black;
 }
+
 .bg-light-gray {
   background-color: #080c241d;
   color: black;
 }
+
 .bg-light-blue {
   background-color: #0083ef1a !important;
   color: black !important;
 }
+
 .TITLE {
   font-size: 24px;
   line-height: 34px;
@@ -158,6 +177,7 @@ const slides = ref([
   color: #080c24;
   text-align: left;
 }
+
 .CAPTION {
   font-size: 16px;
   line-height: 26px;
@@ -186,11 +206,13 @@ const slides = ref([
   text-align: left;
   display: inline-block;
 }
+
 .QOS {
   line-height: 26px;
   font-family: 'Public Sans';
   color: #565969;
 }
+
 .slide-group-container {
   position: relative;
 }

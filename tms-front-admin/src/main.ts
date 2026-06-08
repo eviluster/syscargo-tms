@@ -18,6 +18,7 @@ import { initVeeValidate } from "@/core/plugins/vee-validate";
 import { initKtIcon } from "@/core/plugins/keenthemes";
 
 import "@/core/plugins/prismjs";
+import "@/assets/sass/style.scss";
 
 const app = createApp(App);
 

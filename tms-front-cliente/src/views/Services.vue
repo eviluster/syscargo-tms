@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import Services from '@/components/Services.vue'
 import BannerDinamico from '@/components/BannerDinamico.vue'
-const bannerTitle = 'Servicios'
+const bannerTitle = 'SERVICIOS'
 const breadcrumb = [
-  { title: 'Home', disabled: false, href: '/' },
+  { title: 'Inicio', disabled: false, href: '/' },
   { title: 'Servicios', disabled: true },
 ]
 </script>

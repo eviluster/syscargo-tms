@@ -22,7 +22,7 @@
               <v-col cols="12" md="4">
                 <!-- Correo -->
                 <v-text-field
-                  label="Your Email"
+                  label="Email"
                   variant="outlined"
                   rounded="0"
                   dense
@@ -34,7 +34,7 @@
               <v-col cols="12" md="4">
                 <!-- Teléfono -->
                 <v-text-field
-                  label="Phone Number"
+                  label="Teléfono"
                   rounded="0"
                   variant="outlined"
                   dense
@@ -46,7 +46,7 @@
             <!-- Comentarios -->
             <v-textarea variant="outlined" dense rounded="0" rows="5" class="my-5" color="white" />
             <!-- Botón -->
-            <v-btn class="mt-7" color="#EA950E" block size="x-large"> REQUEST A QUOTE </v-btn>
+            <v-btn class="mt-7" color="#EA950E" block size="x-large">ENVIAR </v-btn>
           </v-form>
         </v-col>
 

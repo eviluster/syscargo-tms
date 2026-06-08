@@ -1,0 +1,64 @@
+# ============================================================================
+# .dockerignore para tms-front-admin y tms-front-cliente
+# Reduce tamaño de build context y acelera COPY
+# ============================================================================
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (se instalan dentro del Dockerfile)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+dist
+build
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+vitest.config.ts
+__tests__/
+*.test.js
+*.test.ts
+
+# Env local
+.env
+.env.local
+.env.*.local
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Documentation
+README.md
+CHANGELOG.md
+docs/
+
+# Build tools config (estos se COPIAN pero no se necesitan en dist)
+# Vitest y Vue va a usarlos, así que sí copiamos
+# Lo que evitamos es copiar en el contexto de build de Docker
+
+# Misc
+.prettierignore
+.eslintignore
+nginx.conf.example
+vitest.setup.ts

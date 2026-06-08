@@ -2,13 +2,13 @@
   <div
     style="
       background: linear-gradient(
-        90deg,
-        #080c24 14.27%,
-        rgba(8, 12, 36, 0.97) 29.06%,
-        rgba(8, 12, 36, 0.91) 41.25%,
-        rgba(8, 12, 36, 0.83) 51.56%,
-        rgba(8, 12, 36, 0.71) 57.4%,
-        rgba(8, 12, 36, 0) 82.4%
+        100deg,
+        rgb(8, 12, 36) 30.27%,
+        rgba(8, 12, 36, 0.97) 49.06%,
+        rgba(8, 12, 36, 0.91) 70.25%,
+        rgba(8, 12, 36, 0.83) 80.56%,
+        rgba(8, 12, 36, 0.71) 100.4%,
+        rgba(8, 12, 36, 0) 80.4%
       );
       height: 400px;
     "
@@ -126,13 +126,3 @@ const props = defineProps({
   background: #ffffff21;
 }
 </style>
-
-<!-- 
-import BannerDinamico from '@/components/BannerDinamico.vue'
-const bannerTitle = 'Servicios'
-const breadcrumb = [
-  { title: 'Home', disabled: false, href: '/' },
-  { title: 'Servicios', disabled: true },
-]
-
-  <BannerDinamico :title="bannerTitle" :breadcrumbItems="breadcrumb" /> -->

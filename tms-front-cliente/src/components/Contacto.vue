@@ -1,34 +1,34 @@
 <template>
   <v-card class="mx-auto" max-width="600" style="background-color: orange">
     <v-card-item>
-      <v-card-title class="d-flex justify-center my-4 title"> CONTACT INFORMATION </v-card-title>
+      <v-card-title class="d-flex justify-center my-4 title"> INFORMACIÓN DE CONTACTO </v-card-title>
       <v-divider :thickness="3" class="my-4 divider"></v-divider>
     </v-card-item>
     <v-card-text>
       <v-row class="info my-6 mx-4">
         <v-col cols="12" md="12">
-          <h3 class="my-4">Contact Number:</h3>
+          <h3 class="my-4">Número de Contacto:</h3>
           <div style="display: flex; align-items: center">
             <div class="yellow mr-4">
               <i class="fas fa-mobile-alt" style="font-size: x-large"></i>
             </div>
             <div>
-              <p class="number">+53 54711145</p>
-              <p class="number">+53 54711145</p>
+              <p class="number">+5363402860</p>
+
             </div>
           </div>
         </v-col>
       </v-row>
       <v-row class="info2 mx-4">
         <v-col cols="12" md="12">
-          <h3 class="my-4">Mail Address:</h3>
+          <h3 class="my-4">Correo electrónico:</h3>
           <div style="display: flex; align-items: center">
             <div class="black mr-4">
               <span class="mdi mdi-email-check-outline"></span>
             </div>
             <div>
-              <p class="email">correo1@gmail.com</p>
-              <p class="email">correo1@gmail.com</p>
+              <p class="email">ventas@syscargo.cu</p>
+
             </div>
           </div>
         </v-col>
@@ -36,14 +36,13 @@
       <br />
       <v-row class="info2 my-4 mx-4">
         <v-col cols="12" md="12">
-          <h3 class="my-4">Office Location:</h3>
+          <h3 class="my-4">Dirección:</h3>
           <div style="display: flex; align-items: center">
             <div class="yellow mr-4">
               <span class="mdi mdi-map-marker"></span>
             </div>
             <div>
-              <p class="address">29B entre 70 y 72 #7010</p>
-              <p class="address">29B entre 70 y 72 #7010</p>
+              <p class="address">Calle 76, #2707, entre 29 y 27, Playa</p>
             </div>
           </div>
         </v-col>

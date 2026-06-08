@@ -1,28 +1,27 @@
 <template>
   <div>
     <v-system-bar style="height: auto" absolute>
-      <v-row>
-        <v-col cols="12" md="3" class="px-0" style="padding-bottom: 9px">
-          <v-img src="/public/left.png" height="123" cover class="custom"></v-img>
+      <v-row no-gutters style="align-items: stretch">
+        <v-col cols="12" md="3" sm="4" class="pa-0 banner-col">
         </v-col>
-        <v-col cols="12" md="9" class="">
+        <v-col cols="12" md="9" sm="8">
           <v-row>
             <v-col cols="12">
-              <v-row class="pt-3" style="background-color: #080c24">
-                <v-col cols="12" md="4" align="center">
+              <v-row class="pt-3 up-header" style="background-color: #080c24">
+                <v-col cols="12" sm="6" md="4" align="center">
                   <span class="adresstime">
-                    <!-- <i class="fas fa-map-marker-alt me-2 text-warning"></i> -->
                     <v-icon class="me-2 text-warning">mdi-map-marker-outline</v-icon>
-                    2500 Southbranch Blvd A, United States</span
+                    Calle 76, #2707, entre 29 y 27, Playa</span
                   >
                 </v-col>
-                <v-col cols="12" md="4" class="d-flex">
+                <v-col cols="12" sm="6" md="4" class="d-flex justify-center justify-sm-start">
                   <span class="adresstime">
-                    <i class="far fa-clock me-2 text-warning"></i> Mon - Sat: 8 am - 5 pm, Sunday:
-                    CLOSED</span
+                    <i class="far fa-clock me-2 text-warning"></i> LUN - SAB: 8 am - 5 pm, DOMINGO:
+                    CERRADO</span
                   >
                 </v-col>
-                <v-col cols="12" md="4" align="center">
+                <v-spacer class="d-none d-md-flex"></v-spacer>
+                <v-col cols="12" md="4" align="center" class="d-none d-md-flex">
                   <div class="d-flex align-center social">
                     <a href="#" class="text-white me-5"><i class="fa-brands fa-facebook-f"></i></a>
                     <a href="#" class="text-white me-5"><i class="fa-brands fa-twitter"></i></a>
@@ -35,23 +34,19 @@
               <v-row>
                 <v-col cols="12" class="pa-0">
                   <v-sheet elevation="0" color="white" height="73" class="d-flex align-center">
-                    <v-btn icon class="d-md-none" @click="drawer = !drawer">
-                      <v-icon>mdi-menu</v-icon>
-                    </v-btn>
-
-                    <div class="d-none d-md-flex align-center">
-                      <router-link to="/" color="black" class="link">
-                        Gestión Logística
-                      </router-link>
-                      <router-link to="/" color="black" class="link">
-                        Planificación y Transporte de Mercancía
-                      </router-link>
+                    <v-spacer />
+                    <div class="d-flex align-center d-sm-none d-md-flex">
+                      <router-link to="/" color="black" class="link"> Inicio </router-link>
                       <router-link to="/reservar" color="black" class="link">
                         Reservar
                       </router-link>
+                      <router-link to="/services" color="black" class="link">
+                        Servicios
+                      </router-link>
                       <router-link to="/plans" color="orange" class="link"> Planes </router-link>
-                      <router-link to="/" color="black" class="link"> Socios </router-link>
-                      <router-link to="/" color="black" class="link"> Sobre Nosotros </router-link>
+                      <router-link to="/contact" color="black" class="link">
+                        Contáctenos
+                      </router-link>
                     </div>
 
                     <v-spacer />
@@ -62,9 +57,12 @@
                       variant="flat"
                       size="large"
                     >
-                      Get A Quote
+                      PEDIR COTIZACIÓN
                     </v-btn>
                     <v-spacer />
+                    <v-btn icon class="d-md-none" @click="drawer = !drawer">
+                      <v-icon>mdi-menu</v-icon>
+                    </v-btn>
                   </v-sheet>
 
                   <v-navigation-drawer v-model="drawer" temporary class="d-md-none">
@@ -90,11 +88,21 @@
 <script setup>
 import { ref } from 'vue'
 
-// Maneja el estado del drawer (abierto/cerrado)
 const drawer = ref(false)
 </script>
 
 <style scoped>
+/* La imagen como background evita cualquier distorsión */
+.banner-col {
+  background-image: url('/left.png');
+  /* background-size: 100% 100%;   ocupa todo el espacio exacto del contenedor  */
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* background-position: left center; */
+  background-position: center center;
+  min-height: 123px;
+}
+
 .adresstime {
   font-family: 'Public Sans';
   color: #fff;
@@ -117,10 +125,25 @@ const drawer = ref(false)
 .link:hover {
   color: #ea950e !important;
 }
-.social a :hover {
+.social a:hover {
   color: #ea950e !important;
 }
-:deep(.v-img__img--cover) {
-  object-fit: fill !important;
+
+/**RESPONSIVE**/
+@media screen and (max-width: 960px) {
+  .adresstime {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .banner-col {
+    min-height: 80px !important;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .adresstime {
+    font-size: 11px;
+  }
 }
 </style>

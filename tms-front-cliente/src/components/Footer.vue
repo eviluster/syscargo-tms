@@ -10,13 +10,13 @@
             </div>
             <!-- Dirección -->
             <div class="mb-2 d-flex flex-column">
-              <strong class="custom">Office Address:</strong>
-              <p class="caption">2245 Gilbert Ave, Cincinnati, OH 45206, United States</p>
+              <strong class="custom">DIRECCIÓN:</strong>
+              <p class="caption">Calle 76, #2707, entre 29 y 27, Playa</p>
             </div>
           </div>
         </v-col>
         <v-col cols="12" sm="6" md="1">
-          <v-img src="/src/assets/arrow.png" max-width="50" height="120"></v-img>
+          <v-img src="/arrow.png" max-width="50" height="120"></v-img>
         </v-col>
         <v-col cols="12" sm="6" md="3">
           <div class="d-flex align-center">
@@ -25,14 +25,14 @@
             </div>
             <!-- Contacto -->
             <div class="mb-2 d-flex flex-column">
-              <strong class="custom">CONTACT US:</strong>
-              <p class="caption">info.logic@transpro.com +1 800-226-4054</p>
-              <p class="caption">+1 800-226-4054</p>
+              <strong class="custom">CONTÁCTENOS:</strong>
+              <p class="caption">ventas@syscargo.cu +5363402860</p>
+              <!-- <p class="caption">+1 800-226-4054</p> -->
             </div>
           </div>
         </v-col>
         <v-col cols="12" sm="6" md="1">
-          <v-img src="/src/assets/arrow.png" max-width="50" height="120"></v-img>
+          <v-img src="/arrow.png" max-width="50" height="120"></v-img>
         </v-col>
         <v-col cols="12" sm="6" md="3">
           <div class="d-flex align-center">
@@ -41,9 +41,9 @@
             </div>
             <!-- Horario -->
             <div class="d-flex flex-column">
-              <strong class="custom">Working Hours:</strong>
-              <p class="caption">Weekdays - Mon-Fri: 8am-21pm Weekend</p>
-              <p class="caption">Sta & Sun: Closed</p>
+              <strong class="custom">HORARIO DE ATENCIÓN:</strong>
+              <p class="caption">Lunes a viernes: 8:00 a. m. - 9:00 p. m.</p>
+              <p class="caption">Fines de semana y domingos: Cerrado</p>
             </div>
           </div>
         </v-col>
@@ -56,14 +56,15 @@
         <v-col cols="12" md="4" class="mb-5">
           <!-- Nombre o Logo -->
           <div class="mb-4">
-            <div class="text-center mb-3">
+            <div class="mb-3">
               <a href="/">
-                <img src="/src/assets/logo.jpeg" alt="" style="width: 200px; height: 200px" />
+                <img src="../../public/logo-footer.png" alt="Logo" />
               </a>
             </div>
             <p class="subtitle-2 textsublogo pb-5">
-              Quickly supply alternative strategic theme areas vis-a-vis B2C mindshare. Objectively
-              repurpose stand-alone synergy via user-centric architectures.
+              Despliegue ágil de áreas temáticas estratégicas alternativas frente a participación de
+              mercado B2C. Reconfigure objetivamente sinergias independientes mediante arquitecturas
+              centradas en el usuario.
             </p>
             <SocialIcons />
           </div>
@@ -71,38 +72,41 @@
 
         <!-- Columna: Enlaces útiles -->
         <v-col cols="12" sm="6" md="2" class="mb-5">
-          <h5 class="text-uppercase font-weight-bold mb-2 usefullLinks">Useful Links</h5>
-          <v-img src="/src/assets/rectangle.png" width="100px" class="mb-4"></v-img>
+          <h5 class="text-uppercase font-weight-bold mb-2 usefullLinks">Enlaces útiles</h5>
+          <v-img src="/rectangle.png" width="100px" class="mb-4"></v-img>
           <ul class="footer-list">
-            <li><a href="/about">About Us</a></li>
-            <li><a href="/services">Services</a></li>
+            <li><a href="/about">Quienes Somos</a></li>
+            <li><a href="/services">Servicios</a></li>
             <li><a href="/portfolio">Portfolio</a></li>
             <li><a href="/blog">Blog</a></li>
-            <li><a href="/contact">Contact Us</a></li>
-            <li><a href="/rastrear">Track Order</a></li>
+            <li><a href="/contact">Contáctenos</a></li>
+            <li><a href="/rastrear">Rastrear Orden</a></li>
           </ul>
         </v-col>
 
         <!-- Columna: Nuestros servicios -->
         <v-col cols="12" sm="6" md="2" class="mb-5">
-          <h5 class="text-uppercase font-weight-bold mb-2 usefullLinks">Our Services</h5>
-          <v-img src="/src/assets/rectangle.png" width="100px" class="mb-4"></v-img>
+          <h5 class="text-uppercase font-weight-bold mb-2 usefullLinks">Nuestros Servicios</h5>
+          <v-img src="/rectangle.png" width="100px" class="mb-4"></v-img>
           <ul class="footer-list">
-            <li><a href="#air-freight">Air Freight</a></li>
-            <li><a href="#ocean-freight">Ocean Freight</a></li>
-            <li><a href="#road-freight">Road Freight</a></li>
-            <li><a href="#warehousing">Warehousing</a></li>
-            <li><a href="#distribution">Distribution</a></li>
+            <li><a href="#air-freight">Carga Aérea</a></li>
+            <li>
+              <a href="#ocean-freight">Carga Marítima<Main></Main></a>
+            </li>
+            <li><a href="#road-freight">Carga Terrestre</a></li>
+            <li><a href="#warehousing">Almacenamiento</a></li>
+            <li><a href="#distribution">Distribución</a></li>
           </ul>
         </v-col>
 
         <!-- Columna: Suscripción al newsletter -->
         <v-col cols="12" md="4" class="mb-5">
-          <h5 class="text-uppercase font-weight-bold mb-2 usefullLinks">Subscribe Now</h5>
-          <v-img src="/src/assets/rectangle.png" width="100px" class="mb-4"></v-img>
+          <h5 class="text-uppercase font-weight-bold mb-2 usefullLinks">Suscribirse Ahora</h5>
+          <v-img src="/rectangle.png" width="100px" class="mb-4"></v-img>
           <p class="mb-4">
-            Continually evolve worldwide vortals rather than process centric human capital.
-            Subscribe for our latest news & articles. and send message.
+            Revolucionamos constantemente plataformas digitales globales, superando los modelos
+            tradicionales de gestión humana. Manténgase actualizado: suscríbase a nuestro boletín.
+            Contáctenos hoy.
           </p>
           <div class="d-flex flex-row">
             <v-text-field label="Email Address" variant="solo-filled" class="mb-2"></v-text-field>
@@ -125,7 +129,7 @@
         </div>
       </v-col>
       <v-col cols="12" sm="6" md="6" align-self="center" class="text-center text-white">
-        <div class="termsCondition">Terms & Condition | Privacy & Policy</div>
+        <div class="termsCondition">Términos & Condiciones | Política de privacidad</div>
       </v-col>
     </v-row>
   </v-container>
@@ -138,7 +142,7 @@ import SocialIcons from './SocialIcons.vue'
 <style scoped>
 /* last block  */
 .termsCondition {
-  width: 278px;
+  width: 378px;
   position: relative;
   font-size: 16px;
   line-height: 26px;
@@ -148,12 +152,15 @@ import SocialIcons from './SocialIcons.vue'
   text-align: left;
   display: inline-block;
 }
+
 .copyright2025 {
   white-space: pre-wrap;
 }
+
 .acubamos {
   color: #ff4c13;
 }
+
 .copyright2025ByContainer {
   width: 383px;
   position: relative;
@@ -173,6 +180,7 @@ import SocialIcons from './SocialIcons.vue'
   color: #f8f8f8;
   text-align: left;
 }
+
 .textsublogo {
   font-size: 16px;
   line-height: 26px;
@@ -181,6 +189,7 @@ import SocialIcons from './SocialIcons.vue'
   text-align: left;
   display: inline-block;
 }
+
 .footer-custom {
   background-color: #080c24;
   color: #fff;
@@ -188,6 +197,7 @@ import SocialIcons from './SocialIcons.vue'
   display: flex;
   flex-direction: column;
 }
+
 .custom {
   font-size: 20px;
   line-height: 28px;
@@ -196,6 +206,7 @@ import SocialIcons from './SocialIcons.vue'
   color: #fff;
   text-align: left;
 }
+
 .caption {
   font-size: 16px;
   line-height: 28px;
@@ -204,6 +215,7 @@ import SocialIcons from './SocialIcons.vue'
   text-align: left;
   display: inline-block;
 }
+
 .yellow {
   display: flex;
   justify-content: center;

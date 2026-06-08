@@ -10,6 +10,9 @@ import { useThemeStore } from "@/stores/theme";
 import { useBodyStore } from "@/stores/body";
 import { themeConfigValue } from "@/layouts/default-layout/config/helper";
 import { initializeComponents } from "@/core/plugins/keenthemes";
+import { useIdleLogout } from "@/composables/useIdleLogout";
+import { useAuthStore } from "@/stores/auth";
+import { useCookies } from "vue3-cookies";
 
 export default defineComponent({
   name: "app",
@@ -20,6 +23,12 @@ export default defineComponent({
     const configStore = useConfigStore();
     const themeStore = useThemeStore();
     const bodyStore = useBodyStore();
+    const { cookies } = useCookies();
+
+    const userData = cookies.get("userData");
+    if (userData) {
+      useIdleLogout(userData.userID);
+    }
 
     onBeforeMount(() => {
       /**
@@ -37,7 +46,6 @@ export default defineComponent({
     onMounted(() => {
       nextTick(() => {
         initializeComponents();
-
         bodyStore.removeBodyClassName("page-loading");
       });
     });
@@ -46,6 +54,10 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+@use "assets/sass/element-ui.dark" as ui-dark;
+@use "assets/sass/plugins" as plugins;
+@use "assets/sass/style" as style;
+
 @import "bootstrap-icons/font/bootstrap-icons.css";
 @import "apexcharts/dist/apexcharts.css";
 @import "quill/dist/quill.snow.css";
@@ -64,9 +76,6 @@ export default defineComponent({
 @import "assets/keenicons/duotone/style.css";
 @import "assets/keenicons/outline/style.css";
 @import "assets/keenicons/solid/style.css";
-@import "assets/sass/element-ui.dark";
-@import "assets/sass/plugins";
-@import "assets/sass/style";
 
 #app {
   display: contents;

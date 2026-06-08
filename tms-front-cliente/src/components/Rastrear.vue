@@ -72,7 +72,7 @@ export default defineComponent({
     setup() {
         const bannerTitle = 'Rastrear orden';
         const breadcrumb = [
-            { title: 'Home', disabled: false, href: '/' },
+            { title: 'Inicio', disabled: false, href: '/' },
             { title: 'Rastrear orden', disabled: true },
         ];
 

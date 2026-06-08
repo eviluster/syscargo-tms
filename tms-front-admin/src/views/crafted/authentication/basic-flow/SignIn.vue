@@ -7,37 +7,15 @@
       id="kt_login_signin_form"
       @submit="onSubmitLogin"
       :validation-schema="login"
-      :initial-values="{ email: 'admin@demo.com', password: 'demo' }"
     >
-      <!--begin::Heading-->
       <div class="text-center mb-10">
-        <!--begin::Title-->
-        <h1 class="text-gray-900 mb-3">Sign In</h1>
-        <!--end::Title-->
-
-        <!--begin::Link-->
-        <div class="text-gray-500 fw-semibold fs-4">
-          New Here?
-
-          <router-link to="/sign-up" class="link-primary fw-bold">
-            Create an Account
-          </router-link>
-        </div>
-        <!--end::Link-->
-      </div>
-      <!--begin::Heading-->
-
-      <div class="mb-10 bg-light-info p-8 rounded">
-        <div class="text-info">
-          Use account <strong>admin@demo.com</strong> and password
-          <strong>demo</strong> to continue.
-        </div>
+        <h1 class="text-gray-900 mb-3">Iniciar sesión</h1>
       </div>
 
       <!--begin::Input group-->
       <div class="fv-row mb-10">
         <!--begin::Label-->
-        <label class="form-label fs-6 fw-bold text-gray-900">Email</label>
+        <label class="form-label fs-6 fw-bold text-gray-900">Usuario</label>
         <!--end::Label-->
 
         <!--begin::Input-->
@@ -45,13 +23,13 @@
           tabindex="1"
           class="form-control form-control-lg form-control-solid"
           type="text"
-          name="email"
+          name="username"
           autocomplete="off"
         />
         <!--end::Input-->
         <div class="fv-plugins-message-container">
           <div class="fv-help-block">
-            <ErrorMessage name="email" />
+            <ErrorMessage name="username" />
           </div>
         </div>
       </div>
@@ -63,15 +41,9 @@
         <div class="d-flex flex-stack mb-2">
           <!--begin::Label-->
           <label class="form-label fw-bold text-gray-900 fs-6 mb-0"
-            >Password</label
+            >Contraseña</label
           >
           <!--end::Label-->
-
-          <!--begin::Link-->
-          <router-link to="/password-reset" class="link-primary fs-6 fw-bold">
-            Forgot Password ?
-          </router-link>
-          <!--end::Link-->
         </div>
         <!--end::Wrapper-->
 
@@ -92,6 +64,16 @@
       </div>
       <!--end::Input group-->
 
+      <!--begin::Forgot password link-->
+      <div class="text-center mb-5">
+        <router-link
+          :to="{ name: 'password-reset' }"
+          class="text-muted fs-7"
+          >¿Olvidaste tu contraseña?</router-link
+        >
+      </div>
+      <!--end::Forgot password link-->
+
       <!--begin::Actions-->
       <div class="text-center">
         <!--begin::Submit button-->
@@ -102,59 +84,25 @@
           id="kt_sign_in_submit"
           class="btn btn-lg btn-primary w-100 mb-5"
         >
-          <span class="indicator-label"> Continue </span>
+          <span class="indicator-label">Iniciar sesión</span>
 
           <span class="indicator-progress">
-            Please wait...
+            Por favor espere...
             <span
               class="spinner-border spinner-border-sm align-middle ms-2"
             ></span>
           </span>
         </button>
-        <!--end::Submit button-->
 
-        <!--begin::Separator-->
-        <div class="text-center text-muted text-uppercase fw-bold mb-5">or</div>
-        <!--end::Separator-->
-
-        <!--begin::Google link-->
-        <a
-          href="#"
-          class="btn btn-flex flex-center btn-light btn-lg w-100 mb-5"
-        >
-          <img
-            alt="Logo"
-            :src="getAssetPath('media/svg/brand-logos/google-icon.svg')"
-            class="h-20px me-3"
-          />
-          Continue with Google
-        </a>
-        <!--end::Google link-->
-
-        <!--begin::Google link-->
-        <a
-          href="#"
-          class="btn btn-flex flex-center btn-light btn-lg w-100 mb-5"
-        >
-          <img
-            alt="Logo"
-            :src="getAssetPath('media/svg/brand-logos/facebook-4.svg')"
-            class="h-20px me-3"
-          />
-          Continue with Facebook
-        </a>
-        <!--end::Google link-->
-
-        <!--begin::Google link-->
-        <a href="#" class="btn btn-flex flex-center btn-light btn-lg w-100">
-          <img
-            alt="Logo"
-            :src="getAssetPath('media/svg/brand-logos/apple-black.svg')"
-            class="h-20px me-3"
-          />
-          Continue with Apple
-        </a>
-        <!--end::Google link-->
+        <!-- Enlace a SignUp -->
+        <div class="text-muted fs-7 mt-5">
+          ¿No tienes cuenta?
+          <router-link
+            :to="{ name: 'sign-up' }"
+            class="ms-1 fw-bold text-primary"
+            >Crear una cuenta</router-link
+          >
+        </div>
       </div>
       <!--end::Actions-->
     </VForm>
@@ -185,17 +133,25 @@ export default defineComponent({
 
     const submitButton = ref<HTMLButtonElement | null>(null);
 
-    //Create form validation object
+    Yup.setLocale({
+      mixed: {
+        required: ({ path }) => `El campo ${path} es obligatorio`,
+      },
+      string: {
+        email: ({ path }) => `El campo ${path} debe ser un correo válido`,
+        min: ({ path, min }) =>
+          `El campo ${path} debe tener al menos ${min} caracteres`,
+      },
+    });
+
     const login = Yup.object().shape({
-      email: Yup.string().email().required().label("Email"),
-      password: Yup.string().min(4).required().label("Password"),
+      username: Yup.string().email().required().label("Usuario"),
+      password: Yup.string().min(8).required().label("Contraseña"),
     });
 
     //Form submit function
     const onSubmitLogin = async (values: any) => {
-      values = values as User;
-      // Clear existing errors
-      store.logout();
+      const { password, username } = values as User;
 
       if (submitButton.value) {
         // eslint-disable-next-line
@@ -205,29 +161,27 @@ export default defineComponent({
       }
 
       // Send login request
-      await store.login(values);
-      const error = Object.values(store.errors);
-
-      if (error.length === 0) {
+      const result = await store.login({ username, password });
+      if (result === true) {
         Swal.fire({
-          text: "You have successfully logged in!",
+          text: "¡Has iniciado sesión exitosamente!",
           icon: "success",
           buttonsStyling: false,
-          confirmButtonText: "Ok, got it!",
+          confirmButtonText: "Ok, perfecto!",
           heightAuto: false,
           customClass: {
             confirmButton: "btn fw-semibold btn-light-primary",
           },
         }).then(() => {
           // Go to page after successfully login
-          router.push({ name: "dashboard" });
+          router.push({ path: "/" });
         });
       } else {
         Swal.fire({
-          text: error[0] as string,
+          text: "Error al iniciar sesión",
           icon: "error",
           buttonsStyling: false,
-          confirmButtonText: "Try again!",
+          confirmButtonText: "Intentar de nuevo!",
           heightAuto: false,
           customClass: {
             confirmButton: "btn fw-semibold btn-light-danger",
@@ -235,12 +189,12 @@ export default defineComponent({
         }).then(() => {
           store.errors = {};
         });
-      }
-
-      //Deactivate indicator
+      } //Deactivate indicator
       submitButton.value?.removeAttribute("data-kt-indicator");
       // eslint-disable-next-line
+      if (submitButton.value) {
         submitButton.value!.disabled = false;
+      }
     };
 
     return {

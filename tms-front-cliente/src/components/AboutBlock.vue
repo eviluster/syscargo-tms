@@ -5,10 +5,10 @@
       <v-col cols="12" md="6">
         <div class="images-wrapper">
           <!-- Imagen grande -->
-          <v-img src="/src/assets/about1.png" alt="Grupo grande" class="large-image" cover />
+          <v-img src="/about1.png" alt="Grupo grande" class="large-image" cover />
 
           <!-- Imagen pequeña superpuesta abajo a la derecha -->
-          <v-img src="/src/assets/about2.png" alt="Grupo pequeño" class="small-image" cover />
+          <v-img src="/about2.png" alt="Grupo pequeño" class="small-image" cover />
 
           <!-- Patrón de puntos en la esquina inferior izquierda -->
           <div class="dots-pattern"></div>
@@ -16,7 +16,28 @@
       </v-col>
 
       <v-col cols="12" md="5">
-        <v-img src="/src/assets/rect.png" height="46" max-width="142" class="mb-5"></v-img>
+        <v-img
+          src="/planout.png"
+          height="54"
+          max-width="195"
+          class="d-flex align-center mb-5 justify-center"
+        >
+          <h2
+            class=""
+            style="
+              font-size: 16px;
+              line-height: 26px;
+              font-weight: 600;
+              font-family: 'Public Sans';
+              color: #ea950e;
+              text-align: center;
+              display: inline-block;
+              width: 100%;
+            "
+          >
+            SOBRE NOSOTROS
+          </h2>
+        </v-img>
 
         <h2 class="font-weight-bold mb-3 TB">
           Bienvenidos a la mejor empresa de transportación en Cuba
@@ -32,19 +53,19 @@
 
         <div class="lista pl-10">
           <div class="d-flex flex-row pb-4">
-            <v-img src="/src/assets/iconAbout.png" height="18" max-width="18"></v-img>
+            <v-img src="/iconAbout.png" height="18" max-width="18"></v-img>
             <span class="sublist">Conozca nuestro equipo</span>
           </div>
           <div class="d-flex flex-row pb-4">
-            <v-img src="/src/assets/iconAbout.png" height="18" max-width="18"></v-img>
+            <v-img src="/iconAbout.png" height="18" max-width="18"></v-img>
             <span class="sublist">Conozca nuestra empresa</span>
           </div>
           <div class="d-flex flex-row pb-4">
-            <v-img src="/src/assets/iconAbout.png" height="18" max-width="18"></v-img>
+            <v-img src="/iconAbout.png" height="18" max-width="18"></v-img>
             <span class="sublist">Contáctenos</span>
           </div>
           <div class="d-flex flex-row pb-2">
-            <v-img src="/src/assets/iconAbout.png" height="18" max-width="18"></v-img>
+            <v-img src="/iconAbout.png" height="18" max-width="18"></v-img>
             <span class="sublist">Equipo profesional</span>
           </div>
           <v-divider class="border-opacity-25"></v-divider>
@@ -52,7 +73,7 @@
 
         <div class="text-center pt-6">
           <v-btn class="text-none text-subtitle-1" color="#ea950e" variant="flat" size="large">
-            ABOUT MORE
+            Leer más
           </v-btn>
         </div>
       </v-col>

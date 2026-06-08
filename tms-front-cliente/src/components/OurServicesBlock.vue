@@ -6,45 +6,22 @@
           <div style="width: 605px" class="text-center">
             <h2 class="title">Nuestros Servicios</h2>
             <p class="caption">
-              Quickly optimize cooperative models for long-term high-impact ROI. Dynamically drive
-              innovative e-commerce and distributed paradigms.
+              En SysCargo, impulsamos soluciones logísticas inteligentes que transforman cadenas de suministro.
+              Combinamos innovación en comercio electrónico con paradigmas distribuidos para ofrecer
             </p>
           </div>
         </v-col>
       </v-row>
       <v-row style="position: relative">
-        <v-slide-group
-          elevation="8"
-          max-width="800"
-          v-model="model"
-          prev-icon="mdi-chevron-left"
-          next-icon="mdi-chevron-right"
-          class="custom-slide-group"
-          center-active="true"
-        >
+        <v-slide-group elevation="8" max-width="800" v-model="model" prev-icon="mdi-chevron-left"
+          next-icon="mdi-chevron-right" class="custom-slide-group" center-active="true">
           <v-slide-group-item v-for="(category, index) in transportCategories" :key="index">
-            <v-card
-              class="mx-auto d-flex justify-center flex-column hover-effect align-center"
-              height="auto"
-              elevation="0"
-              width="auto"
-              style="background: transparent"
-            >
-              <v-img
-                class="align-end text-white flex-shrink-0 topimg"
-                height="236"
-                width="308"
-                :src="category.picture"
-                cover
-              >
+            <v-card class="mx-auto d-flex justify-center flex-column hover-effect align-center" height="auto"
+              elevation="0" width="auto" style="background: transparent">
+              <v-img class="align-end text-white flex-shrink-0 topimg" height="236" width="308" :src="category.picture"
+                cover>
               </v-img>
-              <v-img
-                class="align-center text-white bottomimg"
-                width="391"
-                height="254"
-                src="/src/assets/mark.png"
-                cover
-              >
+              <v-img class="align-center text-white bottomimg" width="391" height="254" src="/mark.png" cover>
                 <div class="icon-container">
                   <v-icon class="category-icon">{{ category.icon }}</v-icon>
                 </div>
@@ -56,12 +33,7 @@
                     <div class="d-flex" style="justify-content: space-between">
                       <router-link to="/services" class="link">READ MORE</router-link>
                       <router-link to="/services" class="link">
-                        <v-icon
-                          color="#EA950E"
-                          icon="mdi-arrow-right-circle"
-                          size="x-large"
-                        ></v-icon
-                      ></router-link>
+                        <v-icon color="#EA950E" icon="mdi-arrow-right-circle" size="x-large"></v-icon></router-link>
                     </div>
                   </div>
                 </v-container>
@@ -92,6 +64,7 @@ const model = null
   text-align: center;
   display: inline-block;
 }
+
 .caption {
   font-size: 16px;
   line-height: 26px;
@@ -101,12 +74,14 @@ const model = null
   display: inline-block;
   height: 52px;
 }
+
 .topimg {
   width: 308px;
   height: 236px;
   position: relative;
   top: 4rem;
 }
+
 .nameC {
   font-size: 24px;
   display: inline-block;
@@ -114,6 +89,7 @@ const model = null
   color: #080c24;
   text-align: left;
 }
+
 .captionC {
   font-size: 16px;
   line-height: 26px;
@@ -123,6 +99,7 @@ const model = null
   display: inline-block;
   height: 52px;
 }
+
 .link {
   font-size: 14px;
   line-height: 26px;
@@ -133,6 +110,7 @@ const model = null
   display: inline-block;
   text-decoration: none;
 }
+
 .icon-container {
   position: absolute;
   top: 0;

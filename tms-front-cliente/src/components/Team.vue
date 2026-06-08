@@ -3,21 +3,30 @@
     <v-container class="py-12" max-width="1220">
       <v-row justify="center">
         <v-col cols="12" align="center">
-          <v-img
-            src="/public/planout.png"
-            max-width="174"
-            max-height="46"
-            class="d-flex align-center"
-          >
-            <img src="/public/TEAM.png" alt="" />
+          <v-img src="/planout.png" height="54" max-width="195" class="d-flex align-center">
+            <h2
+              class=""
+              style="
+                font-size: 16px;
+                line-height: 26px;
+                font-weight: 600;
+                font-family: 'Public Sans';
+                color: #ea950e;
+                text-align: center;
+                display: inline-block;
+                width: 100%;
+              "
+            >
+              MIEMBROS DEL EQUIPO
+            </h2>
           </v-img>
 
           <h2 class="py-5 title">NUESTRO EQUIPO PROFESIONAL</h2>
 
-          <p class="caption" style="max-width: 600px">
+          <!-- <p class="caption" style="max-width: 600px">
             Dramatically enhance interactive metrics for reliable services. Proactively unleash
             fully researched e-commerce.
-          </p>
+          </p> -->
         </v-col>
       </v-row>
 

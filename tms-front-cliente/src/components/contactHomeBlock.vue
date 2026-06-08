@@ -4,7 +4,7 @@
       <v-row>
         <v-col cols="7" class="pr-0">
           <img
-            src="/public/contacthome.png"
+            src="/contacthome.png"
             alt=""
             style="height: 100%; object-fit: fill !important ; width: 100%"
           />
@@ -12,12 +12,26 @@
         <v-col cols="5" class="pl-0">
           <div class="d-flex flex-column pa-7 ga-7" style="background-color: #080c24; height: 100%">
             <v-img
-              src="/public/planout.png"
+              src="/planout.png"
               max-width="149"
               max-height="46"
               class="d-flex align-center text-center"
             >
-              <img src="/public/lets.png" alt="" />
+              <h2
+                class=""
+                style="
+                  font-size: 16px;
+                  line-height: 26px;
+                  font-weight: 600;
+                  font-family: 'Public Sans';
+                  color: #ea950e;
+                  text-align: center;
+                  display: inline-block;
+                  width: 100%;
+                "
+              >
+                HABLEMOS
+              </h2>
             </v-img>
             <span class="title">¿NESECITA AYUDA? ESTAMOS PARA AYUDARLE</span>
             <div class="d-flex">
@@ -29,8 +43,8 @@
               </div>
 
               <div>
-                <h3 class="text-h6 font-weight-bold mb-1 TITLE">Have Any Question</h3>
-                <span class="phone"> +19524357106 </span>
+                <h3 class="text-h6 font-weight-bold mb-1 TITLE">Tiene Alguna pregunta</h3>
+                <span class="phone"> +5363402860 </span>
               </div>
             </div>
             <div>
@@ -41,7 +55,7 @@
                 size="x-large"
                 rounded="0"
               >
-                CONTACT US
+                CONTÁCTENOS
               </v-btn>
             </div>
           </div>

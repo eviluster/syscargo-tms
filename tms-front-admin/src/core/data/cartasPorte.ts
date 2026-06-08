@@ -7,6 +7,7 @@ interface ICartaPorte {
   subtotal: number;
   impuestos: number;
   total: number;
+  
 }
 
 const cartasPorte: Array<ICartaPorte> = [

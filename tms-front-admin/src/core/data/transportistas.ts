@@ -1,36 +1,21 @@
 interface ITransportistas {
-  id: number;
-  nombre: string;
-  direccion: string;
-  telefono: string;
-  correo: string;
-  razonSocial: string;
-  tipoServicio: string;
-  estado: string;
+  id: string | number;
+  name?: string;
+  nombre?: string;
+  direccion?: string;
+  telefono?: string;
+  phone?: string;
+  correo?: string;
+  email?: string;
+  razonSocial?: string;
+  tipoServicio?: string;
+  servicios?: string[];
+  estado?: string;
+  user?: { name: string; email: string; phone: string };
+  [key: string]: any;
 }
 
-const transportistas: Array<ITransportistas> = [
-  {
-    id: 1,
-    nombre: "Transportes Pérez",
-    direccion: "Calle 123, Ciudad",
-    telefono: "555-1234",
-    correo: "contacto@transportesperez.com",
-    razonSocial: "Empresa",
-    tipoServicio: "Carga",
-    estado: "Activo",
-  },
-  {
-    id: 2,
-    nombre: "Mudanzas Rápidas",
-    direccion: "Avenida 456, Ciudad",
-    telefono: "555-5678",
-    correo: "info@mudanzasrapidas.com",
-    razonSocial: "Autónomo",
-    tipoServicio: "Mudanzas",
-    estado: "Suspendido",
-  },
-];
+const transportistas: Array<ITransportistas> = [];
 
 export type { ITransportistas };
 export default transportistas;

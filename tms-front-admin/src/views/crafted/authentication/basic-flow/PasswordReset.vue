@@ -11,12 +11,12 @@
       <!--begin::Heading-->
       <div class="text-center mb-10">
         <!--begin::Title-->
-        <h1 class="text-gray-900 mb-3">Forgot Password ?</h1>
+        <h1 class="text-gray-900 mb-3">¿Olvidaste tu contraseña?</h1>
         <!--end::Title-->
 
         <!--begin::Link-->
         <div class="text-gray-500 fw-semibold fs-4">
-          Enter your email to reset your password.
+          Ingresa tu correo para restablecer tu contraseña.
         </div>
         <!--end::Link-->
       </div>
@@ -48,17 +48,17 @@
           id="kt_password_reset_submit"
           class="btn btn-lg btn-primary fw-bold me-4"
         >
-          <span class="indicator-label"> Submit </span>
+          <span class="indicator-label">Enviar</span>
           <span class="indicator-progress">
-            Please wait...
+            Por favor espere...
             <span
               class="spinner-border spinner-border-sm align-middle ms-2"
             ></span>
           </span>
         </button>
 
-        <router-link to="/sign-up" class="btn btn-lg btn-light-primary fw-bold"
-          >Cancel</router-link
+        <router-link :to="{ name: 'sign-in' }" class="btn btn-lg btn-light-primary fw-bold"
+          >Cancelar</router-link
         >
       </div>
       <!--end::Actions-->
@@ -109,10 +109,10 @@ export default defineComponent({
 
       if (!error) {
         Swal.fire({
-          text: "You have successfully logged in!",
+          text: "¡Se ha enviado el correo de restablecimiento!",
           icon: "success",
           buttonsStyling: false,
-          confirmButtonText: "Ok, got it!",
+          confirmButtonText: "Ok, perfecto!",
           heightAuto: false,
           customClass: {
             confirmButton: "btn fw-semibold btn-light-primary",
@@ -123,7 +123,7 @@ export default defineComponent({
           text: error[0] as string,
           icon: "error",
           buttonsStyling: false,
-          confirmButtonText: "Try again!",
+          confirmButtonText: "Intentar de nuevo!",
           heightAuto: false,
           customClass: {
             confirmButton: "btn fw-semibold btn-light-danger",

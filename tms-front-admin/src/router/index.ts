@@ -3,22 +3,63 @@ import {
   createWebHistory,
   type RouteRecordRaw,
 } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
-import { useConfigStore } from "@/stores/config";
 
+import { useCookies } from "vue3-cookies";
+import { ref } from "vue";
+import api from "@/services/api";
+import Swal from "sweetalert2";
+const { cookies } = useCookies();
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
-    redirect: "/dashboard",
-    component: () => import("@/layouts/default-layout/DefaultLayout.vue"),
-    meta: {
-      middleware: "auth",
+    redirect: () => {
+      // ejemplo leyendo token/usuario desde localStorage
+      const token = ref<any>(cookies.get("refresh_token"));
+      const userJson = cookies.get("userData");
+      console.log("userData", userJson);
+      //const user = userJson ? JSON.parse(userJson) : null;
+
+      if (!token) return "/login"; // no autenticado -> login
+      if (userJson?.role === "Prestatario") {
+        console.log("ES Prestatario");
+        return "/comercializacion/ordenes/listrordenesPrestatario";
+      }
+      if (userJson?.role === "Cliente") {
+        console.log("ES CLIENTE");
+        return "/comercializacion/ordenes/listrordenesCliente";
+      } else {
+        // por defecto
+        return "/comercializacion/ordenes/listrordenesA";
+      }
     },
+
+    component: () => import("@/layouts/default-layout/DefaultLayout.vue"),
+    meta: { requiresAuth: true }, // Proteger todas las rutas hijas
     children: [
       {
         path: "/dashboard",
         name: "dashboard",
-        component: () => import("@/views/comercializacion/aereo/Listorden.vue"),
+        redirect: () => {
+          // ejemplo leyendo token/usuario desde localStorage
+          const token = ref<any>(cookies.get("refresh_token"));
+          const userJson = cookies.get("userData");
+          console.log("userData", userJson);
+
+          //const user = userJson ? JSON.parse(userJson) : null;
+
+          if (!token) return "/login"; // no autenticado -> login
+          if (userJson?.role === "Prestatario") {
+            console.log("ES Prestatario");
+            return "/comercializacion/ordenes/listrordenesPrestatario";
+          }
+          if (userJson?.role === "Cliente") {
+            console.log("ES CLIENTE");
+            return "/comercializacion/ordenes/listrordenesCliente";
+          } else {
+            // por defecto
+            return "/comercializacion/ordenes/listrordenesA";
+          }
+        },
         meta: {
           pageTitle: "Dashboard",
           breadcrumbs: ["Dashboards"],
@@ -146,6 +187,76 @@ const routes: Array<RouteRecordRaw> = [
         },
         children: [
           {
+            path: "/administracion/nomencladores/transfer/origen",
+            name: "administracion-origen",
+            component: () =>
+              import(
+                "@/views/administracion/nomencladores/transfer/origen.vue"
+              ),
+            meta: {
+              pageTitle: "Origen",
+              breadcrumbs: ["administracion", "Transfer", "Origen"],
+            },
+          },
+          {
+            path: "/administracion/nomencladores/transfer/destino",
+            name: "administracion-destino",
+            component: () =>
+              import(
+                "@/views/administracion/nomencladores/transfer/destino.vue"
+              ),
+            meta: {
+              pageTitle: "Destino",
+              breadcrumbs: ["administracion", "Transfer", "Destino"],
+            },
+          },
+          {
+            path: "/administracion/nomencladores/transfer/tipodeviaje",
+            name: "administracion-tipodeviaje",
+            component: () =>
+              import(
+                "@/views/administracion/nomencladores/transfer/tipoviaje.vue"
+              ),
+            meta: {
+              pageTitle: "Tipo de viaje",
+              breadcrumbs: ["administracion", "Transfer", "Tipo de viaje"],
+            },
+          },
+          {
+            path: "/administracion/nomencladores/transfer/tipodetrasnporte",
+            name: "administracion-tipodetrasnporte",
+            component: () =>
+              import(
+                "@/views/administracion/nomencladores/transfer/ttrasnporte.vue"
+              ),
+            meta: {
+              pageTitle: "Tipo de trasnporte",
+              breadcrumbs: ["administracion", "Transfer", "Tipo de trasnporte"],
+            },
+          },
+          {
+            path: "/administracion/nomencladores/transfer/tipodemercado",
+            name: "administracion-tipodemercado",
+            component: () =>
+              import(
+                "@/views/administracion/nomencladores/transfer/tmercado.vue"
+              ),
+            meta: {
+              pageTitle: "Tipo de mercado",
+              breadcrumbs: ["administracion", "Transfer", "Tipo de mercado"],
+            },
+          },
+          {
+            path: "/administracion/nomencladores/transfer/tipodepago",
+            name: "administracion-tipodepago",
+            component: () =>
+              import("@/views/administracion/nomencladores/transfer/tpago.vue"),
+            meta: {
+              pageTitle: "Tipo de pago",
+              breadcrumbs: ["administracion", "Transfer", "Tipo de pago"],
+            },
+          },
+          {
             path: "marca",
             name: "nomencladores-marca",
             component: () =>
@@ -213,71 +324,13 @@ const routes: Array<RouteRecordRaw> = [
         ],
       },
 
-      /* Pagina de usuarios */
       {
-        path: "/administracion/usuarios",
-        name: "administracion-usuarios",
-        component: () =>
-          import("@/views/administracion/usuarios/usuarioList.vue"),
+        path: "/comercializacion/calendar",
+        name: "comercializacion-calendar",
+        component: () => import("@/views/comercializacion/calendar.vue"),
         meta: {
-          pageTitle: "Usuarios",
-          breadcrumbs: ["Administración", "Usuarios"],
-        },
-      },
-
-      /* Pagina de reservar (Hoteles) */
-      {
-        path: "/comercializacion/reservar",
-        name: "comercializacion-reservar",
-        component: () =>
-          import("@/views/comercializacion/hoteles/reservar.vue"),
-        meta: {
-          pageTitle: "Reservar",
-          breadcrumbs: ["Comercialización", "Hoteles", "Reservar"],
-        },
-      },
-      {
-        path: "/configuracion/hoteles/planes",
-        name: "configuracion-planes",
-        component: () => import("@/views/comercializacion/hoteles/planesA.vue"),
-        meta: {
-          pageTitle: "Planes Alimenticios",
-          breadcrumbs: ["Comercialización", "Hoteles", "Planes Alimenticios"],
-        },
-      },
-      {
-        path: "/configuracion/hoteles/edades",
-        name: "configuracion-edades",
-        component: () => import("@/views/comercializacion/hoteles/edades.vue"),
-        meta: {
-          pageTitle: "Edades",
-          breadcrumbs: ["Comercialización", "Hoteles", "Edades"],
-        },
-      },
-      {
-        path: "/administracion/nomencladores/hoteles/tiposcama",
-        name: "administracion-tiposcama",
-        component: () =>
-          import("@/views/administracion/nomencladores/hoteles/tiposcama.vue"),
-        meta: {
-          pageTitle: "Tipos de camas",
-          breadcrumbs: ["administracion", "Hoteles", "Tipos de camas"],
-        },
-      },
-      {
-        path: "/administracion/nomencladores/hoteles/clasificacionhabitaciones",
-        name: "administracion-clasificacionhabitaciones",
-        component: () =>
-          import(
-            "@/views/administracion/nomencladores/hoteles/clasificacionhabitaciones.vue"
-          ),
-        meta: {
-          pageTitle: "Planes Alimenticios",
-          breadcrumbs: [
-            "Administración",
-            "Hoteles",
-            "Clasificación de habitaciones",
-          ],
+          pageTitle: "Calendario",
+          breadcrumbs: ["Comercializacion"],
         },
       },
 
@@ -288,7 +341,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "comercializacion-ordenes-listrordenesA",
         component: () => import("@/views/comercializacion/aereo/Listorden.vue"),
         meta: {
-          pageTitle: "Órdenes de Carga",
+          pageTitle: "Órdenes de Carga Todas",
           breadcrumbs: [
             "Comercialización",
             "Órdenes",
@@ -297,125 +350,301 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "/comercializacion/ordenes/listrordenesPrestatario",
+        name: "comercializacion-ordenes-listrordenesPrestatario",
+        component: () => import("@/views/prestatario/Listorden.vue"),
+        meta: {
+          pageTitle: "Propuestas de cargas",
+          breadcrumbs: ["Comercialización", "Lista de Propuestas de cargas"],
+        },
+      },
+      {
+        path: "/comercializacion/propuestas",
+        name: "comercializacion/propuestas",
+        component: () =>
+          import("@/views/comercializacion/aereo/ListaPropuestasAdmin.vue"),
+        meta: {
+          pageTitle: "Lista de Propuestas de cargas Admin",
+          breadcrumbs: [
+            "Comercialización",
+            "Lista de Propuestas de cargas Admin",
+          ],
+        },
+      },
+
+      //--------------------Peticiones ----------------------
+      {
+        path: "/comercializacion/peticion/listpeticionesCliente",
+        name: "comercializacion-peticion-listpeticionesCliente",
+        component: () => import("@/views/cliente/ListaPeticiones.vue"),
+        meta: {
+          pageTitle: "Peticiones Cliente",
+          breadcrumbs: [
+            "Comercialización",
+            "Peticiones",
+            "Lista de Peticiones",
+          ],
+        },
+      },
+      {
+        path: "/comercializacion/peticion/addpeticion",
+        name: "comercializacion-peticion-addpeticion",
+        component: () => import("@/views/cliente/FormularioPeticion.vue"),
+        meta: {
+          pageTitle: "Peticiones",
+          breadcrumbs: ["Comercialización", "Peticiones", "Añadir Petición"],
+        },
+      },
+
+      //--------------------End Peticiones ----------------------
+      {
+        path: "/comercializacion/ordenes/listrordenesCliente",
+        name: "comercializacion-ordenes-listrordenesCliente",
+        component: () => import("@/views/cliente/Listorden.vue"),
+        meta: {
+          pageTitle: "Órdenes de Carga Cliente",
+          breadcrumbs: [
+            "Comercialización",
+            "Órdenes",
+            "Lista de Órdenes de Carga",
+          ],
+        },
+      },
+
+      {
         path: "/comercializacion/ordenes/addordenA",
         name: "comercializacion-ordenes-addordenA",
         component: () => import("@/views/comercializacion/aereo/AddOrden.vue"),
+        beforeEnter: async (to, from, next) => {
+          try {
+            // Abre modal con select para elegir modalidad
+            const inputOptions: Record<string, string> = {
+              aerea: "Aérea",
+              // maritima: "Marítima",
+              terrestre: "Terrestre",
+              // ferroviaria: "Ferroviaria",
+            };
+
+            const result = await Swal.fire({
+              title: "Elige una modalidad para la orden de carga",
+              input: "select" as const, // 'as const' ayuda a TS a inferir correctamente
+              inputOptions,
+              inputPlaceholder: "Selecciona una modalidad",
+              showCancelButton: true,
+              cancelButtonText: "Cancelar",
+              confirmButtonText: "Continuar",
+              allowOutsideClick: false,
+              customClass: {
+                popup: "swal2-dark-popup",
+                title: "swal2-dark-title",
+                input: "swal2-dark-input", // aquí va la clase para el input/select
+                confirmButton: "swal2-dark-confirm",
+                cancelButton: "swal2-dark-cancel",
+              },
+              didOpen: () => {
+                // 1) Forzar color del título
+                try {
+                  const titleEl = Swal.getTitle?.() as HTMLElement | null;
+                  if (titleEl) {
+                    titleEl.style.color = "#ffffff";
+                    titleEl.style.setProperty("color", "#ffffff", "important");
+                  } else {
+                    // fallback: querySelector dentro del popup
+                    const popup = Swal.getPopup?.();
+                    const t = popup?.querySelector(
+                      ".swal2-title",
+                    ) as HTMLElement | null;
+                    if (t) t.style.setProperty("color", "#ffffff", "important");
+                  }
+                } catch (e) {
+                  console.warn("No se pudo forzar color título Swal:", e);
+                }
+
+                // 2) Estilizar select
+                const el =
+                  Swal.getInput() as unknown as HTMLSelectElement | null;
+                if (!el) return;
+
+                // estilos en línea para asegurar compatibilidad cross-browser
+                Object.assign(el.style, {
+                  background: "#26272F",
+                  color: "#ffffff",
+                  border: "1px solid #2b3746",
+                  padding: "8px 10px",
+                  borderRadius: "6px",
+                });
+
+                // Aplicar estilos a cada <option> (mejor compatibilidad que solo CSS en algunos navegadores)
+                for (let i = 0; i < el.options.length; i++) {
+                  const opt = el.options[i] as HTMLOptionElement;
+                  opt.style.background = "#26272F";
+                  opt.style.color = "#ffffff";
+                }
+              },
+            });
+
+            // Si el usuario canceló el modal
+            if (!result.value) {
+              // cancela navegación y permanece en la ruta anterior
+              return next(false);
+            }
+
+            const modalidadSeleccionada = String(result.value).toLowerCase();
+
+            // Mapear modalidad a ruta destino (ajusta los nombres si ya los tienes)
+            const mapToRouteName: Record<string, string> = {
+              terrestre: "comercializacion-ordenes-addorden-terrestre",
+              aerea: "comercializacion-ordenes-addorden-aereo",
+              ferroviaria: "comercializacion-ordenes-addorden-ferroviaria",
+              maritima: "comercializacion-ordenes-addorden-maritima",
+            };
+
+            const targetName = mapToRouteName[modalidadSeleccionada];
+
+            if (targetName) {
+              // redirigir a la ruta correspondiente
+              return next({ name: targetName });
+            } else {
+              // por seguridad: si no está mapeada, cancelar
+              return next(false);
+            }
+          } catch (err) {
+            console.error("[guard] error mostrando modal modalidad:", err);
+            // Si falla algo, no bloqueamos la navegación: dejamos cargar la ruta por defecto
+            return next();
+          }
+        },
         meta: {
           pageTitle: "Órdenes de Carga",
           breadcrumbs: ["Comercialización", "Órdenes", "Añadir Órden de Carga"],
         },
       },
-      /*Paginas de transfer*/
+      // ---- Ruta destino terrestre (asegúrate de agregarla) ----
       {
-        path: "/comercializacion/reservas/addreservation",
-        name: "comercializacion-reservas-addreservation",
+        path: "/comercializacion/ordenes/addorden-terrestre",
+        name: "comercializacion-ordenes-addorden-terrestre",
         component: () =>
-          import("@/views/comercializacion/transfer/AddReservation.vue"),
+          import("@/views/comercializacion/aereo/AddOrdenTerrestre.vue"),
         meta: {
-          pageTitle: "Reservar",
-          breadcrumbs: ["Comercialización", "Reservas", "Crear Reservacion"],
+          pageTitle: "Órdenes de Carga - Terrestre",
+          breadcrumbs: [
+            "Comercialización",
+            "Órdenes",
+            "Añadir Órden Terrestre",
+          ],
         },
       },
+
       {
-        path: "/comercializacion/reservas/listreservations",
-        name: "comercializacion-reservas-listreservations",
+        path: "/comercializacion/ordenes/addorden-aereo",
+        name: "comercializacion-ordenes-addorden-aereo",
         component: () =>
-          import("@/views/comercializacion/transfer/ListReservations.vue"),
+          import("@/views/comercializacion/aereo/AddOrdenAereo.vue"),
         meta: {
-          pageTitle: "Reservar",
-          breadcrumbs: ["Comercialización", "Reservas", "Lista de Reservas"],
+          pageTitle: "Órdenes de Carga - Aéreo",
+          breadcrumbs: ["Comercialización", "Órdenes", "Añadir Órden Aéreo"],
         },
       },
+
       {
-        path: "/comercializacion/ofertas/listofertas",
-        name: "comercializacion-reservas-listofertas",
+        path: "/comercializacion/ordenes/addorden-ferroviaria",
+        name: "comercializacion-ordenes-addorden-ferroviaria",
         component: () =>
-          import("@/views/comercializacion/transfer/ListOferta.vue"),
+          import("@/views/comercializacion/aereo/AddOrdenFerroviaria.vue"),
         meta: {
-          pageTitle: "Ofertas",
-          breadcrumbs: ["Comercialización", "Ofertas", "Lista de Ofertas"],
+          pageTitle: "Órdenes de Carga - Ferroviaria",
+          breadcrumbs: [
+            "Comercialización",
+            "Órdenes",
+            "Añadir Órden Ferroviaria",
+          ],
         },
       },
+
       {
-        path: "/comercializacion/ofertas/addofertas",
-        name: "comercializacion-reservas-addofertas",
+        path: "/comercializacion/ordenes/addorden-maritima",
+        name: "comercializacion-ordenes-addorden-maritima",
         component: () =>
-          import("@/views/comercializacion/transfer/AddOferta.vue"),
+          import("@/views/comercializacion/aereo/AddOrdenMaritima.vue"),
         meta: {
-          pageTitle: "Ofertas",
-          breadcrumbs: ["Comercialización", "Ofertas", "Añadir Oferta"],
+          pageTitle: "Órdenes de Carga - Marítima",
+          breadcrumbs: ["Comercialización", "Órdenes", "Añadir Órden Marítima"],
         },
       },
+
       {
-        path: "/administracion/nomencladores/transfer/origen",
-        name: "administracion-origen",
+        path: "/comercializacion/perzonalizacion",
+        name: "comercializacion/perzonalizacion",
         component: () =>
-          import("@/views/administracion/nomencladores/transfer/origen.vue"),
+          import("@/views/comercializacion/aereo/Perzonalizacion.vue"),
         meta: {
-          pageTitle: "Origen",
-          breadcrumbs: ["administracion", "Transfer", "Origen"],
+          pageTitle: "Perzonalización",
+          breadcrumbs: ["Comercialización", "Perzonalización"],
         },
       },
+
       {
-        path: "/administracion/nomencladores/transfer/origen",
-        name: "administracion-origen",
-        component: () =>
-          import("@/views/administracion/nomencladores/transfer/origen.vue"),
+        path: "/comercializacion/carta-porte",
+        name: "comercializacion/carta-porte",
+        component: () => import("@/views/terrestre/carta porte/carta.vue"),
         meta: {
-          pageTitle: "Origen",
-          breadcrumbs: ["administracion", "Transfer", "Origen"],
+          pageTitle: "Carta Porte",
+          breadcrumbs: ["Comercialización", "Carta Porte"],
         },
       },
+
       {
-        path: "/administracion/nomencladores/transfer/destino",
-        name: "administracion-destino",
+        path: "/comercializacion/hoja-de-ruta-terrestre",
+        name: "comercializacion/hoja-de-ruta-terrestre",
         component: () =>
-          import("@/views/administracion/nomencladores/transfer/destino.vue"),
+          import("@/views/terrestre/hoja-de-ruta/hojaTerrestre.vue"),
         meta: {
-          pageTitle: "Destino",
-          breadcrumbs: ["administracion", "Transfer", "Destino"],
+          pageTitle: "Hoja de ruta terrestre",
+          breadcrumbs: ["Comercialización", "Hoja de ruta terrestre"],
         },
       },
+
       {
-        path: "/administracion/nomencladores/transfer/tipodeviaje",
-        name: "administracion-tipodeviaje",
+        path: "/comercializacion/precio-sobre-destinos",
+        name: "comercializacion/precio-sobre-destinos",
         component: () =>
-          import("@/views/administracion/nomencladores/transfer/tviaje.vue"),
+          import("@/views/comercializacion/aereo/PrecioSobreDestinos.vue"),
         meta: {
-          pageTitle: "Tipo de viaje",
-          breadcrumbs: ["administracion", "Transfer", "Tipo de viaje"],
+          pageTitle: "Precio sobre destinos",
+          breadcrumbs: ["Comercialización", "Precio sobre destinos"],
         },
       },
+
       {
-        path: "/administracion/nomencladores/transfer/tipodetrasnporte",
-        name: "administracion-tipodetrasnporte",
+        path: "/comercializacion/emergencias",
+        name: "comercializacion/emergencias",
         component: () =>
-          import(
-            "@/views/administracion/nomencladores/transfer/ttrasnporte.vue"
-          ),
+          import("@/views/comercializacion/aereo/Emergencias.vue"),
         meta: {
-          pageTitle: "Tipo de trasnporte",
-          breadcrumbs: ["administracion", "Transfer", "Tipo de trasnporte"],
+          pageTitle: "Emergencias",
+          breadcrumbs: ["Comercialización", "Emergencias"],
         },
       },
+
       {
-        path: "/administracion/nomencladores/transfer/tipodemercado",
-        name: "administracion-tipodemercado",
+        path: "/comercializacion/politicas-de-entregas",
+        name: "comercializacion/politicas-de-entregas",
         component: () =>
-          import("@/views/administracion/nomencladores/transfer/tmercado.vue"),
+          import("@/views/comercializacion/aereo/PoliticasDeEntregas.vue"),
         meta: {
-          pageTitle: "Tipo de mercado",
-          breadcrumbs: ["administracion", "Transfer", "Tipo de mercado"],
+          pageTitle: "Políticas de entregas",
+          breadcrumbs: ["Comercialización", "Políticas de entregas"],
         },
       },
+
       {
-        path: "/administracion/nomencladores/transfer/tipodepago",
-        name: "administracion-tipodepago",
+        path: "/comercializacion/politica-de-cancelaciones",
+        name: "comercializacion/politica-de-cancelaciones",
         component: () =>
-          import("@/views/administracion/nomencladores/transfer/tpago.vue"),
+          import("@/views/comercializacion/aereo/PoliticaDeCancelaciones.vue"),
         meta: {
-          pageTitle: "Tipo de pago",
-          breadcrumbs: ["administracion", "Transfer", "Tipo de pago"],
+          pageTitle: "Política de cancelaciones",
+          breadcrumbs: ["Comercialización", "Política de cancelaciones"],
         },
       },
 
@@ -514,15 +743,7 @@ const routes: Array<RouteRecordRaw> = [
           breadcrumbs: ["Apps", "Subscriptions"],
         },
       },
-      {
-        path: "/comercializacion/calendar",
-        name: "comercializacion-calendar",
-        component: () => import("@/views/comercializacion/Calendar.vue"),
-        meta: {
-          pageTitle: "Calendar",
-          breadcrumbs: ["Apps"],
-        },
-      },
+
       {
         path: "/apps/chat/private-chat",
         name: "apps-private-chat",
@@ -576,6 +797,16 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           pageTitle: "View User",
           breadcrumbs: ["Crafted", "Modals", "General"],
+        },
+      },
+      {
+        path: "/admin/user/users",
+        name: "administration-user",
+        component: () =>
+          import("@/views/administracion/usuarios/UsuarioList.vue"),
+        meta: {
+          pageTitle: "Usuarios",
+          breadcrumbs: ["Administration", "Users"],
         },
       },
       {
@@ -794,32 +1025,79 @@ const routes: Array<RouteRecordRaw> = [
           ],
         },
       },
+      // ---------Gestión de Precios por Prestatario ------------------
       {
-        path: "/comercializacion/registroV/addV",
-        name: "comercializacion-registroV-addV",
-        component: () => import("@/views/terrestre/vehiculos/AddVehiculo.vue"),
+        path: "/prestatario/mis-precios",
+        name: "PrestatarioMisPrecios",
+        component: () =>
+          import("@/views/prestatario/MisPrecios.vue"),
         meta: {
-          pageTitle: "Añadir vehiculo",
-          breadcrumbs: ["Comercialización", "vehiculos", "Añadir vehiculo"],
+          pageTitle: "Mis Precios",
+          breadcrumbs: ["Prestatario", "Mis Precios"],
+          requiresAuth: true,
         },
       },
+      // ---------Servicios de prestatarios nuevos ------------------
+      // router/index.ts (fragmento — añade al array `routes`)
       {
-        path: "/comercializacion/registroV/listV",
-        name: "comercializacion-registroV-listV",
-        component: () => import("@/views/terrestre/vehiculos/ListVehiculo.vue"),
-        meta: {
-          pageTitle: "Listado de vehiculos",
-          breadcrumbs: [
-            "Comercialización",
-            "vehiculos",
-            "Listado de vehiculos",
-          ],
-        },
+        path: "/prestatario/services/:serviceKey",
+        props: (route) => ({ serviceKey: route.params.serviceKey }),
+        children: [
+          {
+            path: "solicitudes",
+            name: "PrestatarioServiceSolicitudes",
+            component: () =>
+              import("@/views/prestatario/services/ServiceSolicitudesList.vue"),
+            props: (route) => ({ serviceKey: route.params.serviceKey }),
+          },
+          {
+            path: "solicitudes/create",
+            name: "PrestatarioServiceCrearSolicitud",
+            component: () =>
+              import("@/views/prestatario/services/ServiceSolicitudForm.vue"),
+            props: (route) => ({
+              serviceKey: route.params.serviceKey,
+              mode: "create",
+            }),
+          },
+          {
+            path: "proposals",
+            name: "PrestatarioServiceProposals",
+            component: () =>
+              import("@/views/prestatario/services/ServiceProposalsList.vue"),
+            props: (route) => ({ serviceKey: route.params.serviceKey }),
+          },
+          {
+            path: "",
+            redirect: (to) => {
+              // Por defecto redirigimos a proposals si existe, o a solicitudes
+              // Nota: el componente index.vue puede manejar una lógica más fina
+              return {
+                name: "PrestatarioServiceProposals",
+                params: { serviceKey: to.params.serviceKey },
+              };
+            },
+          },
+        ],
       },
+
+      // --------- Fin Servicios de prestatarios nuevos ------------------
+
       {
         path: "/administracion/cartaporte/cartaP",
         name: "administracion-cartaporte-cartaP",
-        component: () => import("@/views/terrestre/carta porte/carta.vue"),
+        component: () =>
+          import("@/views/terrestre/carta porte/cartaPorteTerrestre.vue"),
+        meta: {
+          pageTitle: "Crear carta porte",
+          breadcrumbs: ["Administracion", "Carta porte", "Crear carta porte"],
+        },
+      },
+      {
+        path: "/administracion/cartaporte/cartaPF",
+        name: "administracion-cartaporte-cartaPF",
+        component: () =>
+          import("@/views/terrestre/carta porte/cartaPorteFerroviario.vue"),
         meta: {
           pageTitle: "Crear carta porte",
           breadcrumbs: ["Administracion", "Carta porte", "Crear carta porte"],
@@ -866,6 +1144,16 @@ const routes: Array<RouteRecordRaw> = [
           ],
         },
       },
+      {
+        path: "/solicitudes/lista-propuestas-solicitudes",
+        name: "propuestas-recibidas",
+        component: () =>
+          import("@/views/prestatario/ListaPropuestasSolicitudes.vue"),
+        meta: {
+          pageTitle: "Solicitudes de alquiler de almacén",
+          breadcrumbs: ["Solicitudes", "Lista de solicitudes"],
+        },
+      },
     ],
   },
   {
@@ -897,6 +1185,15 @@ const routes: Array<RouteRecordRaw> = [
           import("@/views/crafted/authentication/basic-flow/PasswordReset.vue"),
         meta: {
           pageTitle: "Password reset",
+        },
+      },
+      {
+        path: "/password-reset-complete",
+        name: "password-reset-complete",
+        component: () =>
+          import("@/views/crafted/authentication/basic-flow/PasswordResetComplete.vue"),
+        meta: {
+          pageTitle: "Complete Password Reset",
         },
       },
     ],
@@ -952,25 +1249,13 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
-  const configStore = useConfigStore();
-
-  // current page view title
-  document.title = `${to.meta.pageTitle} - ${import.meta.env.VITE_APP_NAME}`;
-
-  // reset config to initial state
-  configStore.resetLayoutConfig();
-
-  // verify auth token before each page change
-  authStore.verifyAuth();
-
-  // before page access check if page requires authentication
-  if (to.meta.middleware == "auth") {
-    if (authStore.isAuthenticated) {
-      next();
-    } else {
-      next({ name: "sign-in" });
-    }
+  const { cookies } = useCookies();
+  const isAuthenticated = !!cookies.get("refresh_token"); // O tu método de verificación
+  const publicPages = ["sign-in", "sign-up", "password-reset", "password-reset-complete"];
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next({ name: "sign-in" });
+  } else if (publicPages.includes(String(to.name)) && isAuthenticated) {
+    next({ name: "dashboard" });
   } else {
     next();
   }

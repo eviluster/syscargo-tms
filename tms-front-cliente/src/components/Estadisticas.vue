@@ -7,7 +7,7 @@
             <div class="d-flex flex-column">
               <span class="number">2000+</span>
               <h5 class="title">ORDENES COMPLETADAS</h5>
-              <p class="caption">Conveniently impact front-end niches via maintainable.</p>
+              <!-- <p class="caption">Conveniently impact front-end niches via maintainable.</p> -->
             </div>
             <v-divider
               :thickness="5"
@@ -22,8 +22,8 @@
           <div class="d-flex">
             <div class="d-flex flex-column">
               <span class="number">100+</span>
-              <h5 class="title">BEST EMPLOYEES</h5>
-              <p class="caption">Conveniently impact front-end niches via maintainable.</p>
+              <h5 class="title mx-4">MEJORES TRABAJADORES</h5>
+              <!-- <p class="caption">Conveniently impact front-end niches via maintainable.</p> -->
             </div>
             <v-divider
               :thickness="5"
@@ -38,7 +38,7 @@
             <div class="d-flex flex-column">
               <span class="number">450+</span>
               <h5 class="title">CLIENTES MUNDIALES</h5>
-              <p class="caption">Conveniently impact front-end niches via maintainable.</p>
+              <!-- <p class="caption">Conveniently impact front-end niches via maintainable.</p> -->
             </div>
             <v-divider
               :thickness="5"
@@ -52,8 +52,8 @@
           <div class="d-flex">
             <div class="d-flex flex-column">
               <span class="number">80+</span>
-              <h5 class="title">WORLD AWARDS</h5>
-              <p class="caption">Conveniently impact front-end niches via maintainable.</p>
+              <h5 class="title">PREMIOS MUNDIALES</h5>
+              <!-- <p class="caption">Conveniently impact front-end niches via maintainable.</p> -->
             </div>
           </div>
         </v-col>

@@ -5,112 +5,106 @@
     v-slot="{ resetForm }"
   >
     <div class="row my-6">
+      <!-- Sección Remitente -->
       <div class="col-md-6">
         <div class="card shadow-sm mb-6">
           <div class="card-body">
             <h3 class="card-title mb-4">Información del Remitente</h3>
-
             <div class="mb-4">
               <label class="required form-label">Carnet de Identidad</label>
               <Field
-                name="carnetIdentidad"
+                name="remitente_dni"
                 type="text"
                 class="form-control form-control-solid"
                 placeholder="Número de carnet"
               />
-              <ErrorMessage name="carnetIdentidad" class="text-danger" />
+              <ErrorMessage name="remitente_dni" class="text-danger" />
             </div>
-
             <div class="mb-4">
               <label class="required form-label">Nombre Completo</label>
               <Field
-                name="nombreRemitente"
+                name="remitente_nombre"
                 type="text"
                 class="form-control form-control-solid"
                 placeholder="Nombre del remitente"
               />
-              <ErrorMessage name="nombreRemitente" class="text-danger" />
+              <ErrorMessage name="remitente_nombre" class="text-danger" />
             </div>
-
             <div class="mb-4">
               <label class="required form-label">Dirección</label>
               <Field
-                name="direccionRemitente"
+                name="direccion"
                 as="textarea"
                 class="form-control form-control-solid"
                 placeholder="Dirección completa"
                 rows="3"
               />
-              <ErrorMessage name="direccionRemitente" class="text-danger" />
+              <ErrorMessage name="direccion" class="text-danger" />
             </div>
           </div>
         </div>
 
-        <!-- Nueva tarjeta de información del emisor -->
+        <!-- Sección Emisor -->
         <div class="card shadow-sm mb-6">
           <div class="card-body">
             <h3 class="card-title mb-4">Información del Emisor</h3>
-
             <div class="mb-4">
               <label class="required form-label">Carnet de Identidad</label>
               <Field
-                name="carnetIdentidadEmisor"
+                name="emisor_dni"
                 type="text"
                 class="form-control form-control-solid"
                 placeholder="Número de carnet"
               />
-              <ErrorMessage name="carnetIdentidadEmisor" class="text-danger" />
+              <ErrorMessage name="emisor_dni" class="text-danger" />
             </div>
-
             <div class="mb-4">
               <label class="required form-label">Nombre Completo</label>
               <Field
-                name="nombreEmisor"
+                name="emisor_nombre"
                 type="text"
                 class="form-control form-control-solid"
                 placeholder="Nombre del emisor"
               />
-              <ErrorMessage name="nombreEmisor" class="text-danger" />
+              <ErrorMessage name="emisor_nombre" class="text-danger" />
             </div>
-
             <div class="mb-4">
               <label class="required form-label">Dirección</label>
               <Field
-                name="direccionEmisor"
+                name="emisor_direccion"
                 as="textarea"
                 class="form-control form-control-solid"
                 placeholder="Dirección completa"
                 rows="3"
               />
-              <ErrorMessage name="direccionEmisor" class="text-danger" />
+              <ErrorMessage name="emisor_direccion" class="text-danger" />
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Sección Detalles del Envío -->
       <div class="col-md-6">
         <div class="card shadow-sm mb-6">
           <div class="card-body">
             <h3 class="card-title mb-4">Detalles del Envío</h3>
-
             <div class="row">
               <div class="col-md-6 mb-4">
                 <label class="required form-label">Cantidad de Bultos</label>
                 <Field
-                  name="cantidadBultos"
+                  name="cant_bultos"
                   type="number"
                   min="1"
                   class="form-control form-control-solid"
                   placeholder="Ej: 2"
                   @change="calcularTotales"
                 />
-                <ErrorMessage name="cantidadBultos" class="text-danger" />
+                <ErrorMessage name="cant_bultos" class="text-danger" />
               </div>
-
               <div class="col-md-6 mb-4">
                 <label class="required form-label">Peso Total (kg)</label>
                 <Field
-                  name="peso"
+                  name="peso_total"
                   type="number"
                   step="0.1"
                   min="0.1"
@@ -118,15 +112,14 @@
                   placeholder="Ej: 5.5"
                   @change="calcularTotales"
                 />
-                <ErrorMessage name="peso" class="text-danger" />
+                <ErrorMessage name="peso_total" class="text-danger" />
               </div>
-
               <div class="col-md-6 mb-4">
                 <label class="required form-label"
                   >Volumen (m³ por bulto)</label
                 >
                 <Field
-                  name="volumenBulto"
+                  name="vol_bulto"
                   type="number"
                   step="0.01"
                   min="0.01"
@@ -134,64 +127,112 @@
                   placeholder="Ej: 0.5"
                   @change="calcularTotales"
                 />
-                <ErrorMessage name="volumenBulto" class="text-danger" />
+                <ErrorMessage name="vol_bulto" class="text-danger" />
               </div>
 
               <div class="col-md-6 mb-4">
                 <label class="required form-label">Origen</label>
                 <Field
-                  name="origen"
+                  name="origen_string"
                   as="select"
                   class="form-select form-select-solid"
                 >
-                  <option value="">Seleccione origen</option>
-                  <option value="La Habana">La Habana</option>
-                  <option value="Santiago">Santiago</option>
-                  <option value="Camagüey">Camagüey</option>
-                  <option value="Holguín">Holguín</option>
+                  <option value="">Seleccione un origen</option>
+                  <option
+                    v-for="item in origenes"
+                    :key="item.id"
+                    :value="item.name"
+                  >
+                    {{ item.name }}
+                  </option>
                 </Field>
-                <ErrorMessage name="origen" class="text-danger" />
+                <ErrorMessage name="origen_string" class="text-danger" />
               </div>
-
               <div class="col-md-6 mb-4">
                 <label class="required form-label">Destino</label>
                 <Field
-                  name="destino"
+                  name="destino_string"
                   as="select"
                   class="form-select form-select-solid"
                 >
-                  <option value="">Seleccione destino</option>
-                  <option value="La Habana">La Habana</option>
-                  <option value="Santiago">Santiago</option>
-                  <option value="Camagüey">Camagüey</option>
-                  <option value="Holguín">Holguín</option>
+                  <option value="">Seleccione un destino</option>
+                  <option
+                    v-for="item in destinos"
+                    :key="item.id"
+                    :value="item.name"
+                  >
+                    {{ item.name }}
+                  </option>
                 </Field>
-                <ErrorMessage name="destino" class="text-danger" />
+                <ErrorMessage name="destino_string" class="text-danger" />
               </div>
 
               <div class="col-md-12 mb-4">
                 <label class="required form-label">Autorizado a Recoger</label>
                 <Field
-                  name="autorizadoRecoger"
+                  name="autorizado_recoger"
                   type="text"
                   class="form-control form-control-solid"
                   placeholder="Nombre de la persona autorizada"
                 />
-                <ErrorMessage name="autorizadoRecoger" class="text-danger" />
+                <ErrorMessage name="autorizado_recoger" class="text-danger" />
               </div>
 
               <div class="col-md-12 mb-4">
                 <label class="required form-label">Tipo de Carga</label>
                 <Field
-                  name="tipoCarga"
+                  name="tipo_carga"
                   as="select"
                   class="form-select form-select-solid"
                 >
                   <option value="">Seleccione un tipo</option>
-                  <option value="Misceláneas">Misceláneas</option>
-                  <option value="Carga General">Carga General</option>
+                  <option value="Seco">Seco</option>
+                  <option value="Refrigerado">Refrigerado</option>
+                  <option value="Carga general">Carga general</option>
                 </Field>
-                <ErrorMessage name="tipoCarga" class="text-danger" />
+                <ErrorMessage name="tipo_carga" class="text-danger" />
+              </div>
+
+              <!-- NUEVO: Vía (marítima / aérea / terrestre / ferroviaria / multimodal) -->
+              <div class="col-md-12 mb-4">
+                <label class="required form-label">Vía</label>
+                <Field
+                  name="via"
+                  as="select"
+                  class="form-select form-select-solid"
+                >
+                  <option value="">Seleccione vía</option>
+                  <!-- Ajusta values para que coincidan con tu enum ViaMode en backend -->
+                  <!-- <option value="maritima">Marítima</option> -->
+                  <option value="aerea">Aérea</option>
+                  <option value="terrestre">Terrestre</option>
+                  <!-- <option value="ferroviaria">Ferroviaria</option>
+                  <option value="multimodal">Multimodal</option> -->
+                </Field>
+                <ErrorMessage name="via" class="text-danger" />
+              </div>
+
+              <!-- SELECT para cliente (solo si es admin) o display si es cliente -->
+              <div class="col-md-12 mb-4" v-if="isAdmin">
+                <label class="form-label">Asignar Cliente (opcional)</label>
+                <select
+                  v-model="selectedClientId"
+                  class="form-select form-select-solid"
+                >
+                  <option value="">-- Seleccione Cliente --</option>
+                  <option v-for="c in clients" :key="c.id" :value="c.id">
+                    {{ c.name || c.username || c.email }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-12 mb-4" v-else>
+                <label class="form-label">Cliente</label>
+                <input
+                  type="text"
+                  class="form-control form-control-solid"
+                  :value="clientDisplayName"
+                  readonly
+                />
               </div>
 
               <div class="col-md-12 mb-4">
@@ -199,26 +240,26 @@
                 <div class="card bg-light p-3">
                   <div class="d-flex justify-content-between">
                     <span>Tarifa base (70/kg):</span>
-                    <span>{{ tarifaBase.toFixed(2) }} CUP</span>
+                    <span>{{ tarifaBase.toFixed(0) }} CUP</span>
                   </div>
                   <div class="d-flex justify-content-between">
                     <span
-                      >Volumen ({{ volumenTotal.toFixed(2) }} m³ × 100
+                      >Volumen ({{ volumenTotal.toFixed(0) }} m³ × 100
                       CUP):</span
                     >
-                    <span>{{ costoVolumen.toFixed(2) }} CUP</span>
+                    <span>{{ costoVolumen.toFixed(0) }} CUP</span>
                   </div>
                   <div class="d-flex justify-content-between">
                     <span>Impuesto aeroportuario (7.70/kg):</span>
-                    <span>{{ impuestoAeroportuario.toFixed(2) }} CUP</span>
+                    <span>{{ impuestoAeroportuario.toFixed(0) }} CUP</span>
                   </div>
                   <div class="d-flex justify-content-between">
                     <span>Comisión del servicio (5%):</span>
-                    <span>{{ comisionServicio.toFixed(2) }} CUP</span>
+                    <span>{{ comisionServicio.toFixed(0) }} CUP</span>
                   </div>
                   <div class="d-flex justify-content-between fw-bold mt-2">
                     <span>Total a pagar:</span>
-                    <span>{{ precioTotal.toFixed(2) }} CUP</span>
+                    <span>{{ precioTotal.toFixed(0) }} CUP</span>
                   </div>
                 </div>
               </div>
@@ -226,6 +267,7 @@
           </div>
         </div>
       </div>
+      <!-- /col-md-6 -->
 
       <div class="col-12">
         <div class="alert alert-warning">
@@ -262,11 +304,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, onMounted, computed } from "vue";
 import { Form, Field, ErrorMessage } from "vee-validate";
 import * as yup from "yup";
-import { useordenesStore } from "@/stores/ordenesDecarga";
 import Swal from "sweetalert2/dist/sweetalert2.js";
+import api from "@/services/api";
+import CargaApi from "@/axios/axios";
+import { useOrigenStore } from "@/stores/origen";
+import { useDestinoStore } from "@/stores/destino";
+import { useCookies } from "vue3-cookies";
 
 export default defineComponent({
   name: "AddOrdenForm",
@@ -276,10 +322,7 @@ export default defineComponent({
     ErrorMessage,
   },
   setup() {
-    const ordenesStore = useordenesStore();
     const loading = ref(false);
-
-    // Variables para cálculos
     const tarifaBase = ref(0);
     const volumenTotal = ref(0);
     const costoVolumen = ref(0);
@@ -287,92 +330,188 @@ export default defineComponent({
     const comisionServicio = ref(0);
     const precioTotal = ref(0);
 
+    const destinoStore = useDestinoStore();
+    const destinos = computed(() => destinoStore.destinoes);
+    const origenStore = useOrigenStore();
+    const origenes = computed(() => origenStore.origenes);
+
+    const { cookies } = useCookies();
+    const cookieUser = ref<any>(null);
+    const selectedClientId = ref<string | null>(null);
+    const clients = ref<any[]>([]);
+
+    const isAdmin = ref(false);
+    const clientDisplayName = computed(() => {
+      if (!cookieUser.value) return "";
+      return (
+        cookieUser.value.name ||
+        cookieUser.value.username ||
+        cookieUser.value.email ||
+        ""
+      );
+    });
+
     const calcularTotales = (event: Event) => {
       const form = (event.target as HTMLInputElement).form;
       if (!form) return;
 
       const formData = new FormData(form);
-      const peso = parseFloat(formData.get("peso") as string) || 0;
-      const cantidadBultos =
-        parseInt(formData.get("cantidadBultos") as string) || 1;
-      const volumenBulto =
-        parseFloat(formData.get("volumenBulto") as string) || 0;
 
-      // Calcular volumen total (cantidad × volumen por bulto)
-      volumenTotal.value = cantidadBultos * volumenBulto;
+      const peso = Math.max(
+        0,
+        parseFloat(formData.get("peso_total") as string) || 0,
+      );
+      const cantidadBultos = Math.max(
+        1,
+        parseInt(formData.get("cant_bultos") as string) || 1,
+      );
+      const volumenBulto = Math.max(
+        0,
+        parseFloat(formData.get("vol_bulto") as string) || 0,
+      );
 
-      // Calcular costo por volumen (100 CUP por m³)
-      costoVolumen.value = volumenTotal.value * 100;
+      volumenTotal.value = Math.round(cantidadBultos * volumenBulto);
+      costoVolumen.value = Math.round(volumenTotal.value * 100);
+      tarifaBase.value = Math.round(peso * 70);
+      impuestoAeroportuario.value = Math.round(peso * 7.7);
 
-      // Calcular tarifa base (70 CUP por kg)
-      tarifaBase.value = peso * 70;
-
-      // Calcular impuesto aeroportuario (7.70 CUP por kg)
-      impuestoAeroportuario.value = peso * 7.7;
-
-      // Seleccionar el mayor entre costo por volumen y tarifa base
       const baseParaCalculos = Math.max(costoVolumen.value, tarifaBase.value);
-
-      // Calcular subtotal (base seleccionada + impuesto)
       const subtotal = baseParaCalculos + impuestoAeroportuario.value;
+      comisionServicio.value = Math.round(subtotal * 0.05);
+      precioTotal.value = Math.round(subtotal + comisionServicio.value);
 
-      // Calcular comisión del servicio (5% del subtotal)
-      comisionServicio.value = subtotal * 0.05;
-
-      // Calcular total (subtotal + comisión)
-      precioTotal.value = subtotal + comisionServicio.value;
+      if (
+        [
+          volumenTotal.value,
+          costoVolumen.value,
+          tarifaBase.value,
+          impuestoAeroportuario.value,
+          comisionServicio.value,
+          precioTotal.value,
+        ].some((val) => val < 0)
+      ) {
+        console.error("Error: Valores negativos detectados en cálculos");
+        resetCalculos();
+      }
     };
 
-    // Esquema de validación
     const schema = yup.object({
-      carnetIdentidad: yup
+      remitente_dni: yup
         .string()
         .required("El carnet de identidad es requerido")
         .matches(/^[0-9]+$/, "Debe contener solo números"),
-      nombreRemitente: yup
+      remitente_nombre: yup
         .string()
         .required("El nombre del remitente es obligatorio")
         .min(3, "Mínimo 3 caracteres"),
-      direccionRemitente: yup
+      direccion: yup
         .string()
         .required("La dirección es obligatoria")
         .min(10, "La dirección debe ser más específica"),
-      carnetIdentidadEmisor: yup
+      emisor_dni: yup
         .string()
         .required("El carnet de identidad del emisor es requerido")
         .matches(/^[0-9]+$/, "Debe contener solo números"),
-      nombreEmisor: yup
+      emisor_nombre: yup
         .string()
         .required("El nombre del emisor es obligatorio")
         .min(3, "Mínimo 3 caracteres"),
-      direccionEmisor: yup
+      emisor_direccion: yup
         .string()
         .required("La dirección del emisor es obligatoria")
         .min(10, "La dirección debe ser más específica"),
-      cantidadBultos: yup
+      cant_bultos: yup
         .number()
         .required("La cantidad de bultos es requerida")
         .min(1, "Mínimo 1 bulto")
         .integer("Debe ser un número entero"),
-      peso: yup
-        .number()
-        .required("El peso es requerido")
-        .min(0.1, "Mínimo 0.1 kg"),
-      volumenBulto: yup
-        .number()
-        .required("El volumen por bulto es requerido")
-        .min(0.01, "Mínimo 0.01 m³"),
-      origen: yup.string().required("El origen es requerido"),
-      destino: yup.string().required("El destino es requerido"),
-      autorizadoRecoger: yup
+      peso_total: yup.number().required("El peso es requerido"),
+      vol_bulto: yup.number().required("El volumen por bulto es requerido"),
+      origen_string: yup.string().required("El origen es requerido"),
+      destino_string: yup.string().required("El destino es requerido"),
+      autorizado_recoger: yup
         .string()
-        .required("La persona autorizada a recoger es requerida")
-        .min(3, "Mínimo 3 caracteres"),
-      tipoCarga: yup
-        .string()
-        .required("El tipo de carga es requerido")
-        .oneOf(["Misceláneas", "Carga General"], "Tipo de carga no válido"),
+        .required("El nombre de la persona autorizada es obligatorio"),
+      tipo_carga: yup.string().required("El tipo de carga es requerido"),
+      via: yup.string().required("La vía es requerida"),
     });
+
+    const resetCalculos = () => {
+      tarifaBase.value = 0;
+      volumenTotal.value = 0;
+      costoVolumen.value = 0;
+      impuestoAeroportuario.value = 0;
+      comisionServicio.value = 0;
+      precioTotal.value = 0;
+    };
+
+    onMounted(async () => {
+      await origenStore.fetchOrigens();
+      await destinoStore.fetchDestinos();
+
+      // cargar user desde cookie (si existe)
+      const raw = cookies.get("userData");
+      try {
+        cookieUser.value = raw
+          ? typeof raw === "string"
+            ? JSON.parse(raw)
+            : raw
+          : null;
+      } catch (e) {
+        cookieUser.value = raw;
+      }
+
+      // determinar rol simple
+      const roleName =
+        cookieUser.value?.role?.name?.toString?.().toLowerCase?.() ||
+        cookieUser.value?.role?.toString?.().toLowerCase?.() ||
+        "";
+
+      isAdmin.value = roleName === "administrador" || roleName === "admin";
+
+      // si es cliente, asignamos selectedClientId automáticamente
+      if (!isAdmin.value && cookieUser.value?.id) {
+        selectedClientId.value = cookieUser.value.id;
+      }
+
+      // Si es admin intentamos cargar lista de clientes (para select)
+      if (isAdmin.value) {
+        try {
+          const res = await api.get("/cliente/all");
+          clients.value = res.data || [];
+        } catch (err) {
+          console.warn("No se pudieron cargar clientes:", err);
+          clients.value = [];
+        }
+      }
+    });
+
+    // Interfaz ligera para la orden
+    interface OrdenAerea {
+      order_id: string;
+      remitente_dni: string;
+      remitente_nombre: string;
+      direccion: string;
+      emisor_dni: string;
+      emisor_nombre: string;
+      emisor_direccion: string;
+      cant_bultos: number;
+      peso_total: number;
+      vol_bulto: number;
+      autorizado_recoger: string;
+      tipo_carga: string;
+      origen_string: string;
+      destino_string: string;
+      fechaRegistro: string;
+      estado: string;
+      tarifabase: number;
+      volumen: number;
+      impuesto: number;
+      comision: number;
+      precio: number;
+      clientId?: string;
+      via?: string;
+    }
 
     const handleSubmit = async (
       values: any,
@@ -381,105 +520,98 @@ export default defineComponent({
       loading.value = true;
 
       try {
-        const newOrden = {
-          id: ordenesStore.ordenes.length + 1,
-          codigoOrden: generateOrderCode(),
-          carnetIdentidad: values.carnetIdentidad,
-          nombreRemitente: values.nombreRemitente,
-          direccionRemitente: values.direccionRemitente,
-          carnetIdentidadEmisor: values.carnetIdentidadEmisor,
-          nombreEmisor: values.nombreEmisor,
-          direccionEmisor: values.direccionEmisor,
-          cantidadBultos: values.cantidadBultos,
-          peso: values.peso,
-          volumenBulto: values.volumenBulto,
-          volumenTotal: volumenTotal.value,
-          origen: values.origen,
-          destino: values.destino,
-          autorizadoRecoger: values.autorizadoRecoger,
-          tipoCarga: values.tipoCarga,
-          tarifaBase: tarifaBase.value,
-          costoVolumen: costoVolumen.value,
-          impuestoAeroportuario: impuestoAeroportuario.value,
-          comisionServicio: comisionServicio.value,
-          precioTotal: precioTotal.value,
+        // Re-check calculations
+        if (
+          tarifaBase.value === 0 &&
+          volumenTotal.value === 0 &&
+          precioTotal.value === 0
+        ) {
+          // permitir si el usuario confía, pero normalmente no debería
+          throw new Error(
+            "Los cálculos de precio son inválidos o están incompletos.",
+          );
+        }
+
+        const order_id = `ORD${Date.now()}`;
+
+        const ordenCompleta: OrdenAerea = {
+          order_id,
+          remitente_dni: values.remitente_dni,
+          remitente_nombre: values.remitente_nombre,
+          direccion: values.direccion,
+          emisor_dni: values.emisor_dni,
+          emisor_nombre: values.emisor_nombre,
+          emisor_direccion: values.emisor_direccion,
+          cant_bultos: Number(values.cant_bultos),
+          peso_total: Number(values.peso_total),
+          vol_bulto: Number(values.vol_bulto),
+          autorizado_recoger: values.autorizado_recoger,
+          tipo_carga: values.tipo_carga,
+          origen_string: values.origen_string,
+          destino_string: values.destino_string,
           fechaRegistro: new Date().toISOString(),
+          estado: "Pendiente",
+          tarifabase: Number(tarifaBase.value),
+          volumen: Number(volumenTotal.value),
+          impuesto: Number(impuestoAeroportuario.value),
+          comision: Number(comisionServicio.value),
+          precio: Number(precioTotal.value),
+          clientId: selectedClientId.value || undefined,
+          via: values.via || undefined,
         };
 
-        await ordenesStore.addOrden(newOrden);
+        // Llamada real al backend
+        // CargaApi.createOrden debe aceptar el payload completo acorde al DTO
+        const res = await CargaApi.createOrden(ordenCompleta);
 
-        Swal.fire({
-          text: "¡Orden registrada exitosamente!",
+        await Swal.fire({
+          title: "Éxito",
+          text: "Orden registrada correctamente",
           icon: "success",
-          buttonsStyling: false,
           confirmButtonText: "Aceptar",
-          customClass: {
-            confirmButton: "btn btn-primary",
-          },
-        }).then(() => {
-          resetForm();
-          // Resetear valores calculados
-          tarifaBase.value = 0;
-          volumenTotal.value = 0;
-          costoVolumen.value = 0;
-          impuestoAeroportuario.value = 0;
-          comisionServicio.value = 0;
-          precioTotal.value = 0;
         });
-      } catch (error) {
-        Swal.fire({
-          text: "Error al registrar la orden",
+
+        resetForm();
+        resetCalculos();
+      } catch (error: any) {
+        console.error("Error al crear orden:", error);
+        await Swal.fire({
+          title: "Error",
+          text:
+            error?.response?.data?.message ||
+            error.message ||
+            "Error al registrar la orden",
           icon: "error",
-          buttonsStyling: false,
           confirmButtonText: "Entendido",
-          customClass: {
-            confirmButton: "btn btn-primary",
-          },
         });
       } finally {
         loading.value = false;
       }
     };
 
-    // En el setup() del formulario de creación
-    const generateOrderCode = (): string => {
-      // Prefijo basado en el tipo de carga (primeras letras)
-      const prefix = "ORD"; // Podría ser diferente según el tipo de carga
-
-      // Parte aleatoria (4 caracteres alfanuméricos)
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Eliminamos caracteres ambiguos
-      let randomPart = "";
-      for (let i = 0; i < 4; i++) {
-        randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-
-      // Parte secuencial (basada en timestamp)
-      const sequentialPart = Date.now().toString().slice(-4);
-
-      // Combinar todo
-      const code = `${prefix}${sequentialPart}${randomPart}`;
-
-      // Verificar unicidad (en un entorno real, verificar contra la base de datos)
-      const isUnique = !ordenesStore.ordenes.some(
-        (order) => order.codigoOrden === code,
-      );
-
-      // Si no es único, generar otro (raro que ocurra con este formato)
-      return isUnique ? code : generateOrderCode();
-    };
-
     return {
       schema,
+      calcularTotales,
       handleSubmit,
       loading,
+      origenes,
+      destinos,
       tarifaBase,
       volumenTotal,
       costoVolumen,
       impuestoAeroportuario,
       comisionServicio,
       precioTotal,
-      calcularTotales,
+      clients,
+      selectedClientId,
+      isAdmin,
+      clientDisplayName,
+      resetForm: () => {},
     };
   },
 });
 </script>
+
+<style scoped>
+/* ajustar cosas si quieres */
+</style>

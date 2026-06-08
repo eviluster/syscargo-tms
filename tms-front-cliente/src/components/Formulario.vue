@@ -1,7 +1,7 @@
 <template>
   <v-card class="mx-auto" max-width="600" style="margin-top: -3%">
     <v-card-item>
-      <v-card-title class="d-flex justify-center my-4"> GET A QUOTE </v-card-title>
+      <v-card-title class="d-flex justify-center my-4"> PEDIR COTIZACIÓN </v-card-title>
       <v-divider :thickness="3" class="my-4"></v-divider>
     </v-card-item>
     <v-card-text>
@@ -12,7 +12,7 @@
               v-model="name.value.value"
               :counter="10"
               :error-messages="name.errorMessage.value"
-              label="Your name"
+              label="Nombre"
               ><template v-slot:prepend-inner>
                 <v-icon>mdi-account</v-icon>
               </template></v-text-field
@@ -22,7 +22,7 @@
             <v-text-field
               v-model="email.value.value"
               :error-messages="email.errorMessage.value"
-              label="Your email"
+              label="Email"
               ><template v-slot:prepend-inner>
                 <v-icon>mdi-email</v-icon>
               </template></v-text-field
@@ -35,7 +35,7 @@
               v-model="phone.value.value"
               :counter="7"
               :error-messages="phone.errorMessage.value"
-              label="Phone Number"
+              label="Teléfono"
               ><template v-slot:prepend-inner>
                 <v-icon>mdi-phone</v-icon>
               </template></v-text-field
@@ -46,7 +46,7 @@
               v-model="select.value.value"
               :error-messages="select.errorMessage.value"
               :items="items"
-              label="Subject"
+              label="Asunto"
             >
               <template v-slot:prepend-inner>
                 <v-icon>mdi-menu-down</v-icon>
@@ -56,7 +56,7 @@
         </v-row>
         <v-row>
           <v-col cols="12" md="12">
-            <v-textarea color="black" label="Write message"
+            <v-textarea color="black" label="Escriba el mensaje"
               ><template v-slot:prepend-inner>
                 <v-icon>mdi-pencil</v-icon>
               </template></v-textarea
@@ -71,7 +71,7 @@
               color="orange-darken-3"
               class="mb-4 py-2"
               style="margin-top: -5%"
-              >SEND MESSAGE</v-btn
+              >Enviar</v-btn
             >
           </v-col>
         </v-row>

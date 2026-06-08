@@ -3,10 +3,10 @@ import Contacto from './Contacto.vue'
 import Formulario from './Formulario.vue'
 import BannerDinamico from '@/components/BannerDinamico.vue'
 import Mapa from './Mapa.vue'
-const bannerTitle = 'Contact Us'
+const bannerTitle = 'CONTÁCTENOS'
 const breadcrumb = [
-  { title: 'Home', disabled: false, href: '/' },
-  { title: 'Contact Us', disabled: true },
+  { title: 'Inicio', disabled: false, href: '/' },
+  { title: 'Contáctenos', disabled: true },
 ]
 </script>
 
@@ -34,6 +34,6 @@ const breadcrumb = [
         </v-card>
       </v-col>
     </v-row>
-    <Mapa address="Avenida 29B y 72, La Habana, Cuba" style="margin-top:50px ;"/>
+    <Mapa address="Avenida 27 y  76,Buenavista,Playa, La Habana, Cuba" style="margin-top: 50px" />
   </v-container>
 </template>
