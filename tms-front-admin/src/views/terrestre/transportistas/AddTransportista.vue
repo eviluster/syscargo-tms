@@ -83,6 +83,46 @@
               </Field>
               <ErrorMessage name="tipoServicio" class="text-danger" />
             </div>
+
+            <!-- Cargas especiales card -->
+            <div class="col-12 mb-4">
+              <label class="form-label">Cargas especiales</label>
+
+              <div
+                v-for="(c, i) in cargasEspeciales"
+                :key="'ce-' + i"
+                class="input-group mb-2"
+              >
+                <input
+                  v-model="cargasEspeciales[i]"
+                  class="form-control form-control-solid"
+                  readonly
+                />
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  @click="removeCargaEspecial(i)"
+                >
+                  Eliminar
+                </button>
+              </div>
+
+              <div class="d-flex gap-2 mb-2">
+                <input
+                  v-model="newCargaEspecial"
+                  class="form-control form-control-solid"
+                  placeholder="Nueva carga especial"
+                  @keyup.enter="addCargaEspecial"
+                />
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  @click="addCargaEspecial"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
           </div>
           <div class="card-footer d-flex justify-content-end">
             <a href="#" class="btn btn-bg-secondary">Cancelar</a>
@@ -123,6 +163,8 @@ export default defineComponent({
   setup() {
     const transportistasStore = useTransportistasStore();
     const loading = ref(false);
+    const cargasEspeciales = ref<string[]>([]);
+    const newCargaEspecial = ref("");
 
     const schema = yup.object({
       nombre: yup.string().required("El nombre es requerido"),
@@ -139,6 +181,17 @@ export default defineComponent({
       tipoServicio: yup.string().required("El tipo de servicio es requerido"),
     });
 
+    function addCargaEspecial() {
+      const v = newCargaEspecial.value && newCargaEspecial.value.trim();
+      if (!v) return;
+      cargasEspeciales.value.push(v);
+      newCargaEspecial.value = "";
+    }
+
+    function removeCargaEspecial(i: number) {
+      cargasEspeciales.value.splice(i, 1);
+    }
+
     const handleSubmit = (
       values: any,
       { resetForm }: { resetForm: () => void },
@@ -149,6 +202,7 @@ export default defineComponent({
         const newTransportista = {
           ...values,
           estado: "Activo", // Estado por defecto
+          cargasEspeciales: cargasEspeciales.value,
         };
         transportistasStore.addTransportista(newTransportista);
         Swal.fire({
@@ -162,6 +216,7 @@ export default defineComponent({
           },
         }).then(() => {
           resetForm();
+          cargasEspeciales.value = [];
         });
       }, 2000);
     };
@@ -170,6 +225,10 @@ export default defineComponent({
       schema,
       handleSubmit,
       loading,
+      cargasEspeciales,
+      newCargaEspecial,
+      addCargaEspecial,
+      removeCargaEspecial,
     };
   },
 });

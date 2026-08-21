@@ -4,5 +4,6 @@ export enum ViaMode {
   AEREA = 'aerea',
   TERRESTRE = 'terrestre',
   FERROVIARIA = 'ferroviaria',
-  MULTIMODAL = 'multimodal',
+  ULTIMA_MILLA = 'ultima_milla',
+  ESCATOLINA = 'escatolina',
 }

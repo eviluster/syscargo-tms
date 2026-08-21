@@ -26,6 +26,7 @@ FROM node:22-alpine AS production
 
 WORKDIR /app
 
+ENV NODE_OPTIONS="--no-experimental-require-module"
 # Etiqueta para debugging
 LABEL maintainer="DevOps Team"
 LABEL version="1.0"
@@ -59,4 +60,4 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=10s \
 
 EXPOSE 5000
 
-CMD ["node", "dist/src/main.js"]
+CMD ["npm", "run", "start:prod:safe"]

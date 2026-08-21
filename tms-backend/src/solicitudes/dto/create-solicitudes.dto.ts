@@ -38,10 +38,7 @@ export class CreateSolicitudDto {
   metros_requeridos?: number;
 
   @IsOptional()
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsString({ each: true })
-  tipo_uso?: string[];
+  tipo_uso?: Array<{ value: string; price?: number }> | string[];
 
   @IsOptional()
   @Type(() => Number)

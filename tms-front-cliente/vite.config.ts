@@ -12,13 +12,23 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    host: '0.0.0.0',
+    port: 80,
+    strictPort: true,
+    allowedHosts: ['tms.syscargo.cu', 'localhost'],
+    hmr: {
+      protocol: 'wss',
+      host: 'tms.syscargo.cu',
+      clientPort: 443,
+    },
+  },
   build: {
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
-          // todo lo de vue y libs pesadas va a "vendor"
-          vendor: ['vue', 'vue-router' /* otras libs */],
+          vendor: ['vue', 'vue-router'],
         },
       },
     },

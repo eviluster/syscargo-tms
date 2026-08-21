@@ -330,9 +330,9 @@
             </button>
           </div>
 
-          <!-- Precios Terrestre -->
-          <div v-if="formData.servicios.includes('terrestre')" class="col-12 section-card">
-            <div class="section-header small">Precios Servicio Terrestre</div>
+          <!-- Precios Terrestre / Escatolina -->
+          <div v-if="formData.servicios.includes('terrestre') || formData.servicios.includes('escatolina')" class="col-12 section-card">
+            <div class="section-header small">Precios Servicio Terrestre/Escatolina</div>
 
             <div class="mb-3">
               <label class="form-label">Precio por contenedor (según origen-destino)</label>
@@ -598,12 +598,21 @@
             </div>
 
             <div class="mt-2">
-              <label class="form-label">Servicios ofrecidos</label>
+              <label class="form-label">Dirección del taller</label>
+              <input
+                v-model="formData.talleresDireccion"
+                class="form-control form-control-solid"
+                placeholder="Dirección completa del taller"
+              />
+            </div>
+
+            <div class="mt-2">
+              <label class="form-label">Servicios ofrecidos y precios</label>
               <div class="d-flex flex-wrap gap-2 mt-2 checkbox-grid">
                 <div
                   v-for="opt in talleresOptions"
                   :key="'taller-chk-' + opt.value"
-                  class="form-check"
+                  class="form-check align-items-center"
                 >
                   <input
                     class="form-check-input"
@@ -613,11 +622,21 @@
                     v-model="formData.talleresServicios"
                   />
                   <label
-                    class="form-check-label text-white"
+                    class="form-check-label text-white me-2"
                     :for="'taller-' + opt.value"
                   >
                     {{ opt.label }}
                   </label>
+                  <input
+                    v-if="formData.talleresServicios.includes(opt.value)"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    class="form-control form-control-solid form-control-sm"
+                    style="width: 100px; display: inline-block;"
+                    v-model.number="formData.talleresPrecios[opt.value]"
+                    placeholder="Precio"
+                  />
                 </div>
               </div>
               <div
@@ -636,6 +655,111 @@
                 min="0"
                 class="form-control form-control-solid"
               />
+            </div>
+
+            <!-- Servicios Complementarios - Reserva -->
+            <div class="mt-3 border rounded p-3">
+              <label class="form-label fw-semibold">Servicios Complementarios</label>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="talleresReservaCitas"
+                  v-model="formData.talleresReservaCitas"
+                />
+                <label class="form-check-label" for="talleresReservaCitas">
+                  Permitir reserva de citas
+                </label>
+              </div>
+
+              <div v-if="formData.talleresReservaCitas" class="mt-2">
+                <div class="row g-2">
+                  <div class="col-md-6">
+                    <label class="form-label">Horario inicio</label>
+                    <input
+                      type="time"
+                      v-model="formData.talleresHorarioInicio"
+                      class="form-control form-control-solid"
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Horario fin</label>
+                    <input
+                      type="time"
+                      v-model="formData.talleresHorarioFin"
+                      class="form-control form-control-solid"
+                    />
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <label class="form-label">Días disponibles</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <label class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value="lunes"
+                        v-model="formData.talleresDiasDisponibles"
+                      />
+                      <span class="form-check-label">Lunes</span>
+                    </label>
+                    <label class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value="martes"
+                        v-model="formData.talleresDiasDisponibles"
+                      />
+                      <span class="form-check-label">Martes</span>
+                    </label>
+                    <label class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value="miercoles"
+                        v-model="formData.talleresDiasDisponibles"
+                      />
+                      <span class="form-check-label">Miércoles</span>
+                    </label>
+                    <label class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value="jueves"
+                        v-model="formData.talleresDiasDisponibles"
+                      />
+                      <span class="form-check-label">Jueves</span>
+                    </label>
+                    <label class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value="viernes"
+                        v-model="formData.talleresDiasDisponibles"
+                      />
+                      <span class="form-check-label">Viernes</span>
+                    </label>
+                    <label class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value="sabado"
+                        v-model="formData.talleresDiasDisponibles"
+                      />
+                      <span class="form-check-label">Sábado</span>
+                    </label>
+                    <label class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value="domingo"
+                        v-model="formData.talleresDiasDisponibles"
+                      />
+                      <span class="form-check-label">Domingo</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -845,17 +969,81 @@
 
           <!-- Rating card -->
           <div class="col-12 section-card">
-            <label class="form-label">Rating de compañía (0 - 5)</label>
-            <input
-              type="number"
-              v-model.number="formData.rating"
-              class="form-control form-control-solid"
-              min="0"
-              max="5"
-              step="0.1"
-            />
-            <div class="text-danger fs-7 mt-1" v-if="errors.rating">
-              {{ errors.rating }}
+            <label class="form-label">
+              Rating de compañía
+            </label>
+
+            <div class="rating-card p-4 rounded border">
+
+              <!-- Estrellas -->
+              <div class="d-flex align-items-center mb-3">
+
+                <i
+                  v-for="star in 5"
+                  :key="star"
+                  class="bi fs-1 me-2 rating-star"
+                  :class="
+                    star <= Math.floor(formData.rating || 0)
+                      ? 'bi-star-fill text-warning'
+                      : star === Math.ceil(formData.rating || 0) &&
+                        ((formData.rating || 0) % 1) >= 0.5
+                      ? 'bi-star-half text-warning'
+                      : 'bi-star text-muted'
+                  "
+                  @click="formData.rating = star"
+                />
+
+                <div class="ms-3">
+
+                  <div class="fw-bold fs-3">
+                    {{ Number(formData.rating || 0).toFixed(1) }}
+                  </div>
+
+                  <div class="text-muted fs-7">
+                    {{
+                      (formData.rating || 0) >= 4.5
+                        ? "Excelente"
+                        : (formData.rating || 0) >= 4
+                        ? "Muy bueno"
+                        : (formData.rating || 0) >= 3
+                        ? "Bueno"
+                        : (formData.rating || 0) >= 2
+                        ? "Regular"
+                        : (formData.rating || 0) >= 1
+                        ? "Deficiente"
+                        : "Sin valoración"
+                    }}
+                  </div>
+
+                </div>
+
+              </div>
+
+              <!-- Campo oculto para mantener binding -->
+              <input
+                type="hidden"
+                v-model="formData.rating"
+              />
+
+              <!-- Hint -->
+              <transition name="fade-up">
+                <div class="rating-hint">
+                  <i class="bi bi-stars"></i>
+
+                  Puede utilizar valoraciones exactas como
+                  <strong>3.5</strong>,
+                  <strong>4.2</strong> o
+                  <strong>4.8</strong>.
+                </div>
+              </transition>
+
+              <div
+                class="text-danger fs-7 mt-3"
+                v-if="errors.rating"
+              >
+                {{ errors.rating }}
+              </div>
+
             </div>
           </div>
 
@@ -881,6 +1069,11 @@
                 v-model="h.ci"
                 class="form-control form-control-solid"
                 placeholder="CI"
+              />
+              <input
+                v-model="h.direccion"
+                class="form-control form-control-solid"
+                placeholder="Dirección"
               />
               <button
                 type="button"
@@ -1007,7 +1200,7 @@ type Transporte = {
   chapa: string;
   tipoTransporte: string;
 };
-type Ayudante = { nombre: string; apellidos: string; ci: string };
+type Ayudante = { nombre: string; apellidos: string; ci: string; direccion?: string };
 
 export default defineComponent({
   name: "sign-up",
@@ -1025,6 +1218,7 @@ export default defineComponent({
     const viaOptions = [
       { value: "aerea", label: "Aérea" },
       { value: "terrestre", label: "Terrestre" },
+      { value: "escatolina", label: "Escatolina" },
     ];
 
     const alquilerOptions = [
@@ -1059,7 +1253,7 @@ export default defineComponent({
     const serviciosAlojOptions = [
       { value: "desayuno", label: "Desayuno" },
       { value: "wifi", label: "Wi-Fi" },
-      { value: "parking", label: "Parking" },
+      { value: "parking", label: "Parqueo" },
       { value: "lavanderia", label: "Lavandería" },
     ];
 
@@ -1104,6 +1298,12 @@ export default defineComponent({
       talleresHorario: "",
       talleresServicios: [] as string[],
       talleresCapacidadVehiculos: null,
+      talleresDireccion: "",
+      talleresPrecios: {} as Record<string, number>,
+      talleresReservaCitas: false,
+      talleresHorarioInicio: "",
+      talleresHorarioFin: "",
+      talleresDiasDisponibles: [] as string[],
 
       providesGPS: false,
       gpsProviders: [] as string[],
@@ -1191,6 +1391,7 @@ export default defineComponent({
           nombre: yup.string().required("Nombre del ayudante obligatorio"),
           apellidos: yup.string().required("Apellidos obligatorios"),
           ci: yup.string().required("CI obligatorio"),
+          direccion: yup.string().optional(),
         }),
       ),
       servicios: yup.array().min(1, "Seleccione al menos un servicio"),
@@ -1356,7 +1557,7 @@ export default defineComponent({
     }
 
     function addAyudante() {
-      formData.ayudantes.push({ nombre: "", apellidos: "", ci: "" });
+      formData.ayudantes.push({ nombre: "", apellidos: "", ci: "", direccion: "" });
     }
     function removeAyudante(i: number) {
       formData.ayudantes.splice(i, 1);
@@ -1586,95 +1787,115 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-.checkbox-grid {
-  gap: 0.5rem;
+<style lang="scss" scoped>
+.rating-card {
+  background: #fafafa;
+  border: 1px solid #e4e6ef;
+  border-radius: 0.75rem;
+  transition: all 0.25s ease;
 }
-.form-check {
-  min-width: 140px;
+
+.rating-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+}
+
+/* ===========================
+   Estrellas
+=========================== */
+
+.rating-star {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.rating-star:hover {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.rating-star:active {
+  transform: scale(1.05);
+}
+
+.rating-star.bi-star-fill,
+.rating-star.bi-star-half {
+  filter: drop-shadow(
+    0 2px 4px rgba(255, 193, 7, 0.25)
+  );
+}
+
+/* ===========================
+   Hint informativo
+=========================== */
+
+.rating-hint {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-.section-card .form-check-label.text-white {
-  color: #ffffff;
-  font-weight: 500;
-}
-.section-card .form-check-input {
-  transform: scale(1.02);
+  gap: 0.35rem;
+
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.08),
+    rgba(255, 248, 220, 0.45)
+  );
+
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 0.75rem;
+
+  color: #6c757d;
+  font-size: 0.85rem;
+
+  animation: fadeInUp 0.5s ease;
 }
 
-.w-lg-700px {
-  max-width: 700px;
+.rating-hint i {
+  color: #f59e0b;
+  font-size: 1rem;
+  animation: pulseStars 2.5s infinite;
 }
 
-.title {
-  color: #ffffff;
-  margin-bottom: 0.25rem;
-}
-.subtitle {
-  color: #cfcfcf;
-  margin-bottom: 1rem;
+.rating-hint strong {
+  color: #495057;
+  font-weight: 700;
 }
 
-.section-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  padding: 0.9rem;
-  border-radius: 8px;
-  margin-bottom: 0.9rem;
+/* ===========================
+   Animaciones
+=========================== */
+
+.fade-up-enter-active {
+  transition: all 0.4s ease;
 }
 
-.sub-section {
-  margin-bottom: 0.6rem;
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
-.section-header {
-  color: #ffffff;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-.section-header.small {
-  font-size: 0.95rem;
-  font-weight: 600;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.form-label,
-.form-check-label,
-.title,
-.subtitle {
-  color: #ffffff !important;
-}
-.form-select option {
-  color: #ffffff;
-  background: transparent;
-}
+@keyframes pulseStars {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 
-.form-control.form-control-solid,
-.form-select.form-select-solid {
-  background: rgba(0, 0, 0, 0.45);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.via-check {
-  min-width: 150px;
-}
-.via-check .form-check-label {
-  color: #ffffff;
-}
-
-.text-muted {
-  color: rgba(255, 255, 255, 0.6) !important;
-}
-
-.text-danger {
-  color: #ff6b6b !important;
-}
-
-@media (max-width: 768px) {
-  .via-check {
-    min-width: 120px;
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
   }
 }
 </style>

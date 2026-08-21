@@ -101,18 +101,77 @@
       </div>
 
       <div class="col-md-12 mb-3" v-if="form.via === 'terrestre'">
-        <label class="form-label required">Transportista disponible</label>
-        <select v-model="form.transportistaId" class="form-select" required>
-          <option value="">Seleccione un transportista</option>
-          <option
-            v-for="transportista in transportistasDisponibles"
-            :key="transportista.id"
-            :value="String(transportista.id)"
-          >
-            {{ transportista.nombre }} - {{ transportista.tipoServicio }}
-          </option>
-        </select>
+  <label class="form-label required">
+    Transportista disponible
+  </label>
+
+  <select
+    v-model="form.transportistaId"
+    class="form-select"
+    required
+  >
+    <option value="">Seleccione un transportista</option>
+
+    <option
+      v-for="transportista in transportistasDisponibles"
+      :key="transportista.id"
+      :value="String(transportista.id)"
+    >
+      {{ transportista.nombre }} - {{ transportista.tipoServicio }}
+    </option>
+  </select>
+
+    <!-- Rating -->
+    <div
+      v-if="transportistaSeleccionado"
+      class="rating-preview mt-3"
+    >
+      <div class="d-flex align-items-center">
+
+        <div class="me-3">
+          <i
+            v-for="star in 5"
+            :key="star"
+            class="bi fs-4 me-1"
+            :class="
+              star <= Math.floor(
+                transportistaSeleccionado.rating || 0
+              )
+                ? 'bi-star-fill text-warning'
+                : 'bi-star text-muted'
+            "
+          />
+        </div>
+
+        <div>
+          <div class="fw-bold">
+            {{
+              Number(
+                transportistaSeleccionado.rating || 0
+              ).toFixed(1)
+            }}/5
+          </div>
+
+          <small class="text-muted">
+            {{
+              transportistaSeleccionado.rating >= 4.5
+                ? 'Excelente'
+                : transportistaSeleccionado.rating >= 4
+                ? 'Muy bueno'
+                : transportistaSeleccionado.rating >= 3
+                ? 'Bueno'
+                : transportistaSeleccionado.rating >= 2
+                ? 'Regular'
+                : transportistaSeleccionado.rating >= 1
+                ? 'Deficiente'
+                : 'Sin valoración'
+            }}
+          </small>
+        </div>
+
       </div>
+    </div>
+  </div>
 
       <div class="col-md-6 mb-3" v-if="form.via === 'terrestre'">
         <label class="form-label">Distancia estimada (km)</label>
@@ -240,6 +299,12 @@ const transportistasDisponibles = computed(() =>
       t.estado?.toLowerCase() === "activo" &&
       (t.tipoServicio?.toLowerCase().includes("carga") ||
         t.tipoServicio?.toLowerCase().includes("terrestre")),
+  ),
+);
+
+const transportistaSeleccionado = computed(() =>
+  transportistasDisponibles.value.find(
+    (t) => String(t.id) === String(form.transportistaId),
   ),
 );
 
@@ -464,5 +529,47 @@ function cancel() {
   color: var(--bs-danger, #dc3545);
   margin-left: 0.25rem;
   font-weight: 600;
+}
+
+/* Card del rating */
+.rating-preview {
+  background: #f8f9fa;
+  border: 1px solid #e4e6ef;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  transition: all 0.25s ease;
+}
+
+.rating-preview:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* Estrellas */
+.rating-preview .bi {
+  transition: all 0.2s ease;
+}
+
+.rating-preview .bi-star-fill,
+.rating-preview .bi-star-half {
+  color: #ffc107;
+  filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.35));
+}
+
+.rating-preview .bi:hover {
+  transform: scale(1.1);
+}
+
+/* Valor numérico */
+.rating-preview .fw-bold {
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+/* Texto descriptivo */
+.rating-preview small {
+  font-size: 0.8rem;
+  color: #7e8299;
 }
 </style>

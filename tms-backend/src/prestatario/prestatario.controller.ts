@@ -99,7 +99,17 @@ export class PrestatarioController {
     return this.prestatarioService.findByService(keyStr as ServiceKey, lim, pg);
   }
 
-  // añade esto en PrestatarioController, antes de @Get(':id')
+  @Get('first')
+  @ApiOperation({
+    summary: 'Obtener el primer prestatario mediante filtros dinámicos',
+  })
+  async first(
+    @Query() query: Record<string, string>,
+  ) {
+    return this.prestatarioService.findFirst(query);
+  }
+
+  // Añade esto en PrestatarioController, antes de @Get(':id')
   @Get('match-space')
   @ApiOperation({
     summary:
@@ -165,6 +175,7 @@ export class PrestatarioController {
       const allowed = Object.values(ViaMode).map((x) =>
         String(x).toLowerCase(),
       );
+      
       if (!allowed.includes(viaNorm)) {
         throw new BadRequestException(
           `Parámetro 'via' inválido. Valores permitidos: ${Object.values(

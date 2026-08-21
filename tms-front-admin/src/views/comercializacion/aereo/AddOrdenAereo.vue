@@ -563,7 +563,23 @@ export default defineComponent({
         // Llamada real al backend
         // CargaApi.createOrden debe aceptar el payload completo acorde al DTO
         const res = await CargaApi.createOrden(ordenCompleta);
+        if (values.via === 'aerea') { 
+          // Si es de carga aerea entonces obtener el primer prestatario compatible.
+          const { data: prestatario } = await api.get('/prestatario/first', {
+            params: {
+              via: values.via,
+              defaultAereo: true,
+            },
+          });
 
+          if (prestatario?.id) {
+            await api.post('/proposals', {
+              cargaId: res.id,
+              prestatarioId: prestatario.id,
+              message: 'Propuesta generada automáticamente',
+            });
+          }
+        }
         await Swal.fire({
           title: "Éxito",
           text: "Orden registrada correctamente",

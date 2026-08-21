@@ -33,6 +33,48 @@ export class SolicitudesService {
       dto.seguro_adquirido = false;
     }
 
+    // Calcular precios para servicios de taller si aplica
+    if (dto.serviceRequested === 'taller' && dto.tipo_uso && Array.isArray(dto.tipo_uso)) {
+      // Obtener el prestatario creador para acceder a sus precios
+      let talleresPrecios: Record<string, number> | null = null;
+
+      if (dto.createdByPrestatarioId) {
+        const prestatario = await this.prestatarioRepo.findOne({
+          where: { id: dto.createdByPrestatarioId },
+        });
+        if (prestatario && prestatario.talleresPrecios) {
+          talleresPrecios = prestatario.talleresPrecios;
+        }
+      }
+
+      // Si hay assigned_prestatario_id, también verificar sus precios
+      if (!talleresPrecios && dto.assigned_prestatario_id) {
+        const prestatario = await this.prestatarioRepo.findOne({
+          where: { id: dto.assigned_prestatario_id },
+        });
+        if (prestatario && prestatario.talleresPrecios) {
+          talleresPrecios = prestatario.talleresPrecios;
+        }
+      }
+
+      // Transformar tipo_uso para incluir precios
+      if (talleresPrecios) {
+        const tipoUsoArray = dto.tipo_uso as Array<{ value: string; price?: number }> | string[];
+        dto.tipo_uso = tipoUsoArray.map((item) => {
+          const serviceName = typeof item === 'string' ? item : item.value;
+          const price = talleresPrecios?.[serviceName] ?? 0;
+          return { value: serviceName, price };
+        });
+      } else {
+        // Si no hay precios configurados, convertir a formato con price: 0
+        const tipoUsoArray = dto.tipo_uso as Array<{ value: string; price?: number }> | string[];
+        dto.tipo_uso = tipoUsoArray.map((item) => {
+          const serviceName = typeof item === 'string' ? item : item.value;
+          return { value: serviceName, price: 0 };
+        });
+      }
+    }
+
     const solicitud = this.solicitudesRepo.create({
       ...dto,
       servicios: dto.servicios ?? [],
@@ -128,6 +170,41 @@ export class SolicitudesService {
 
   async update(id: string, dto: UpdateSolicitudDto): Promise<Solicitud> {
     const s = await this.findOne(id);
+
+    // Calcular precios para servicios de taller si aplica (similar a create)
+    if (dto.serviceRequested === 'taller' && dto.tipo_uso && Array.isArray(dto.tipo_uso)) {
+      let talleresPrecios: Record<string, number> | null = null;
+
+      // Intentar obtener precios del prestatario asignado o creador
+      const prestatarioId = dto.assigned_prestatario_id || s.assigned_prestatario_id || (dto as any).createdByPrestatarioId || s.created_by_prestatario_id;
+
+      if (prestatarioId) {
+        const prestatario = await this.prestatarioRepo.findOne({
+          where: { id: prestatarioId },
+        });
+        if (prestatario && prestatario.talleresPrecios) {
+          talleresPrecios = prestatario.talleresPrecios;
+        }
+      }
+
+      // Transformar tipo_uso para incluir precios
+      if (talleresPrecios) {
+        const tipoUsoArray = dto.tipo_uso as Array<{ value: string; price?: number }> | string[];
+        const tipoUsoTransformado = tipoUsoArray.map((item) => {
+          const serviceName = typeof item === 'string' ? item : item.value;
+          const price = talleresPrecios?.[serviceName] ?? 0;
+          return { value: serviceName, price };
+        });
+        dto.tipo_uso = tipoUsoTransformado as any;
+      } else {
+        const tipoUsoArray = dto.tipo_uso as Array<{ value: string; price?: number }> | string[];
+        const tipoUsoTransformado = tipoUsoArray.map((item) => {
+          const serviceName = typeof item === 'string' ? item : item.value;
+          return { value: serviceName, price: 0 };
+        });
+        dto.tipo_uso = tipoUsoTransformado as any;
+      }
+    }
 
     Object.assign(s, dto);
 

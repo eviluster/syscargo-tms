@@ -501,15 +501,81 @@
             </div>
 
             <!-- Rating -->
-            <div class="mb-3">
-              <label class="fs-6 fw-semibold mb-2">Rating de compañía</label>
-              <el-input
-                v-model.number="formData.rating"
-                type="number"
-                placeholder="0 - 5"
-              />
-              <div class="text-danger fs-7 mt-1" v-if="errors.rating">
-                {{ errors.rating }}
+            <div class="mb-4">
+              <label class="fs-6 fw-semibold mb-3 d-block">
+                Rating de compañía
+              </label>
+
+              <div class="rating-card p-3 rounded border">
+
+                <!-- Estrellas -->
+                <div class="d-flex align-items-center mb-3">
+
+                  <i
+                    v-for="star in 5"
+                    :key="star"
+                    class="bi fs-1 me-2 rating-star"
+                    :class="[
+                      star <= Math.floor(formData.rating || 0)
+                        ? 'bi-star-fill text-warning'
+                        : star === Math.ceil(formData.rating || 0) &&
+                          ((formData.rating || 0) % 1) >= 0.5
+                        ? 'bi-star-half text-warning'
+                        : 'bi-star text-muted'
+                    ]"
+                    @click="formData.rating = star"
+                  />
+
+                  <div class="ms-3">
+
+                    <div class="fw-bold fs-3">
+                      {{ Number(formData.rating || 0).toFixed(1) }}
+                    </div>
+
+                    <div class="text-muted fs-7">
+                      {{
+                        formData.rating >= 4.5
+                          ? 'Excelente'
+                          : formData.rating >= 4
+                          ? 'Muy bueno'
+                          : formData.rating >= 3
+                          ? 'Bueno'
+                          : formData.rating >= 2
+                          ? 'Regular'
+                          : formData.rating >= 1
+                          ? 'Deficiente'
+                          : 'Sin valoración'
+                      }}
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <!-- Hint -->
+                <transition name="fade-up">
+                  <div class="rating-hint">
+                    <i class="bi bi-stars me-2"></i>
+                    Puede utilizar valoraciones exactas como
+                    <strong>3.5</strong>,
+                    <strong>4.2</strong> o
+                    <strong>4.8</strong>.
+                  </div>
+                </transition>
+
+                <!-- Input oculto para mantener el binding -->
+                <input
+                  type="hidden"
+                  v-model="formData.rating"
+                />
+
+                <div
+                  class="text-danger fs-7 mt-2"
+                  v-if="errors.rating"
+                >
+                  {{ errors.rating }}
+                </div>
+
               </div>
             </div>
 
@@ -567,6 +633,7 @@
                 <el-input v-model="h.nombre" placeholder="Nombre" />
                 <el-input v-model="h.apellidos" placeholder="Apellidos" />
                 <el-input v-model="h.ci" placeholder="CI" />
+                <el-input v-model="h.direccion" placeholder="Dirección" />
                 <button
                   type="button"
                   class="btn btn-outline-danger"
@@ -639,7 +706,7 @@ type Transporte = {
   chapa: string;
   tipoTransporte: string;
 };
-type Ayudante = { nombre: string; apellidos: string; ci: string };
+type Ayudante = { nombre: string; apellidos: string; ci: string; direccion?: string };
 
 type FormValues = {
   name: string;
@@ -799,6 +866,7 @@ export default defineComponent({
           nombre: yup.string().required(),
           apellidos: yup.string().required(),
           ci: yup.string().required(),
+          direccion: yup.string().optional(),
         }),
       ),
       servicios: yup.array().min(1, "Seleccione al menos un servicio"),
@@ -926,7 +994,7 @@ export default defineComponent({
       formData.transportes.splice(i, 1);
     }
     function addAyudante() {
-      formData.ayudantes.push({ nombre: "", apellidos: "", ci: "" });
+      formData.ayudantes.push({ nombre: "", apellidos: "", ci: "", direccion: "" });
     }
     function removeAyudante(i: number) {
       formData.ayudantes.splice(i, 1);
@@ -1112,3 +1180,115 @@ export default defineComponent({
   },
 });
 </script>
+<style lang="scss" scoped>
+.rating-card {
+  background: #fafafa;
+  border: 1px solid #e4e6ef;
+  border-radius: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.rating-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+}
+
+/* ===========================
+   Estrellas
+=========================== */
+
+.rating-star {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.rating-star:hover {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.rating-star:active {
+  transform: scale(1.05);
+}
+
+.rating-star.bi-star-fill,
+.rating-star.bi-star-half {
+  filter: drop-shadow(
+    0 2px 4px rgba(255, 193, 7, 0.25)
+  );
+}
+
+/* ===========================
+   Hint informativo
+=========================== */
+
+.rating-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.08),
+    rgba(255, 248, 220, 0.45)
+  );
+
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 0.75rem;
+
+  color: #6c757d;
+  font-size: 0.85rem;
+
+  animation: fadeInUp 0.5s ease;
+}
+
+.rating-hint i {
+  color: #f59e0b;
+  font-size: 1rem;
+  animation: pulseStars 2.5s infinite;
+}
+
+.rating-hint strong {
+  color: #495057;
+  font-weight: 700;
+}
+
+/* ===========================
+   Animaciones
+=========================== */
+
+.fade-up-enter-active {
+  transition: all 0.4s ease;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseStars {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+</style>

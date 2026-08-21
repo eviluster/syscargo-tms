@@ -47,7 +47,9 @@ export class CargaService {
   }
 
   async findAll(): Promise<Carga[]> {
-    return this.cargaRepository.find({ order: { createdAt: 'DESC' } });
+    return this.cargaRepository.find({
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findOne(id: string, actor?: User): Promise<Carga> {

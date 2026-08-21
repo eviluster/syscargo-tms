@@ -345,22 +345,97 @@
               </div>
 
               <div class="col-md-12 mb-4" v-if="values.via === 'terrestre'">
-                <label class="required form-label">Transportista disponible</label>
+                <label class="required form-label">
+                  Transportista disponible
+                </label>
+
                 <Field
                   name="transportista_id"
                   as="select"
                   class="form-select form-select-solid"
                 >
-                  <option value="">Seleccione un transportista</option>
+                  <option value="">
+                    Seleccione un transportista
+                  </option>
+
                   <option
                     v-for="transportista in transportistasDisponibles"
                     :key="transportista.id"
                     :value="String(transportista.id)"
                   >
-                    {{ transportista.nombre }} - {{ transportista.tipoServicio }}
+                    {{ transportista.nombre }}
+                    -
+                    {{ transportista.tipoServicio }}
                   </option>
                 </Field>
-                <ErrorMessage name="transportista_id" class="text-danger" />
+
+                <ErrorMessage
+                  name="transportista_id"
+                  class="text-danger"
+                />
+
+                <!-- Rating -->
+                <div
+                  v-if="values.transportista_id"
+                  class="mt-4 rating-card p-3"
+                >
+                  <template
+                    v-for="transportista in transportistasDisponibles"
+                    :key="transportista.id"
+                  >
+                    <div
+                      v-if="String(transportista.id) === String(values.transportista_id)"
+                    >
+                      <div class="fw-semibold mb-2">
+                        Rating del transportista
+                      </div>
+
+                      <div class="d-flex align-items-center">
+                        <div class="me-3">
+                          <i
+                            v-for="star in 5"
+                            :key="star"
+                            class="bi fs-3 me-1"
+                            :class="
+                              star <= Math.floor(transportista.rating || 0)
+                                ? 'bi-star-fill text-warning'
+                                : star === Math.ceil(transportista.rating || 0) &&
+                                  ((transportista.rating || 0) % 1) >= 0.5
+                                ? 'bi-star-half text-warning'
+                                : 'bi-star text-muted'
+                            "
+                          />
+                        </div>
+
+                        <div>
+                          <div class="fw-bold fs-4">
+                            {{
+                              Number(
+                                transportista.rating || 0
+                              ).toFixed(1)
+                            }}
+                          </div>
+
+                          <small class="text-muted">
+                            {{
+                              (transportista.rating || 0) >= 4.5
+                                ? "Excelente"
+                                : (transportista.rating || 0) >= 4
+                                ? "Muy bueno"
+                                : (transportista.rating || 0) >= 3
+                                ? "Bueno"
+                                : (transportista.rating || 0) >= 2
+                                ? "Regular"
+                                : (transportista.rating || 0) >= 1
+                                ? "Deficiente"
+                                : "Sin valoración"
+                            }}
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
               </div>
 
               <!-- Campos MARÍTIMA -->
@@ -590,6 +665,13 @@ export default defineComponent({
             t.tipoServicio?.toLowerCase().includes("terrestre")),
       ),
     );
+
+    const transportistaSeleccionado = computed(() => {
+      return transportistasDisponibles.value.find(
+        (t) =>
+          String(t.id) === String(initialValues.transportista_id),
+      );
+    });
 
     const { cookies } = useCookies();
     const cookieUser = ref<any>(null);
@@ -1158,5 +1240,116 @@ export default defineComponent({
 /* ajustes visuales */
 .card-title {
   font-size: 1.05rem;
+}
+
+.rating-card {
+  background: #fafafa;
+  border: 1px solid #e4e6ef;
+  border-radius: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.rating-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+}
+
+/* ===========================
+   Estrellas
+=========================== */
+
+.rating-star {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.rating-star:hover {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.rating-star:active {
+  transform: scale(1.05);
+}
+
+.rating-star.bi-star-fill,
+.rating-star.bi-star-half {
+  filter: drop-shadow(
+    0 2px 4px rgba(255, 193, 7, 0.25)
+  );
+}
+
+/* ===========================
+   Hint informativo
+=========================== */
+
+.rating-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.08),
+    rgba(255, 248, 220, 0.45)
+  );
+
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 0.75rem;
+
+  color: #6c757d;
+  font-size: 0.85rem;
+
+  animation: fadeInUp 0.5s ease;
+}
+
+.rating-hint i {
+  color: #f59e0b;
+  font-size: 1rem;
+  animation: pulseStars 2.5s infinite;
+}
+
+.rating-hint strong {
+  color: #495057;
+  font-weight: 700;
+}
+
+/* ===========================
+   Animaciones
+=========================== */
+
+.fade-up-enter-active {
+  transition: all 0.4s ease;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseStars {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
 }
 </style>

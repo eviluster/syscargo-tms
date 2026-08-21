@@ -57,6 +57,9 @@
         <template v-slot:tipo_uso="{ row }">{{
           castRow(row).tipo_uso
         }}</template>
+        <template v-slot:precio_total="{ row }">{{
+          formatPrecioTotal(castRow(row).tipo_uso)
+        }}</template>
         <template v-slot:altura_m="{ row }"
           >{{ castRow(row).altura_m ?? "-" }} m</template
         >
@@ -751,6 +754,38 @@ function formatDateTime(dateStr: string | null) {
     return dateStr ?? "-";
   }
 }
+
+/**
+ * Formatea el precio total a partir del campo tipo_uso
+ * tipo_uso puede ser: Array<{ value: string; price?: number }> | string[] | null
+ */
+function formatPrecioTotal(tipoUso: any): string {
+  if (!tipoUso) return "-";
+  
+  // Si es un array de objetos con precio
+  if (Array.isArray(tipoUso)) {
+    if (tipoUso.length === 0) return "-";
+    
+    const total = tipoUso.reduce((sum, item) => {
+      if (typeof item === "object" && item !== null && typeof item.price === "number") {
+        return sum + item.price;
+      }
+      return sum;
+    }, 0);
+    
+    if (total === 0) {
+      // Verificar si hay items pero sin precio definido
+      const hasItems = tipoUso.some(item => typeof item === "object" && item !== null && item.value);
+      if (hasItems) return "$0.00";
+      return "-";
+    }
+    
+    return `$${total.toFixed(2)}`;
+  }
+  
+  return "-";
+}
+
 function getStatusBadgeClass(status: string | undefined) {
   return {
     badge: true,

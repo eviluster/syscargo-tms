@@ -1,0 +1,9 @@
+tls:
+  certificates:
+    - certFile: /certs/syscargo.cu.crt
+      keyFile: /certs/syscargo.cu.key
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/syscargo.cu.crt
+        keyFile: /certs/syscargo.cu.key

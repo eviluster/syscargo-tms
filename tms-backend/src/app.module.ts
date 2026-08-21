@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import { config } from '../ormconfig';
 import { JwtModule } from '@nestjs/jwt';
@@ -49,6 +50,12 @@ import { SolicitudesModule } from './solicitudes/solicitudes.module';
 import { ProposalsAlquilerModule } from './proposals_alquiler/proposal-alquiler.module';
 import { ProposalsServicesModule } from './proposals_services/proposal-service.module';
 import { PeticionModule } from './peticion/peticion.module';
+import { TallerServicioModule } from './taller-servicio/taller-servicio.module';
+import { TallerHorarioModule } from './taller-horario/taller-horario.module';
+import { CitaTallerModule } from './cita-taller/cita-taller.module';
+import { TipoServicioMecanicoModule } from './tipo-servicio-mecanico/tipo-servicio-mecanico.module';
+import { AppScheduleModule } from './common/schedule/schedule.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -56,6 +63,16 @@ import { PeticionModule } from './peticion/peticion.module';
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV}`,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minuto
+        limit: 100, // 100 requests por minuto
+      },
+      {
+        ttl: 60000, // 1 minuto
+        limit: 20, // 20 requests por minuto para endpoints sensibles
+      },
+    ]),
     TypeOrmModule.forRoot(config),
     JwtModule.register({
       secret: process.env.JWT_SECRET_KEY,
@@ -105,6 +122,12 @@ import { PeticionModule } from './peticion/peticion.module';
     ProposalsAlquilerModule,
     ProposalsServicesModule,
     PeticionModule,
+    TallerServicioModule,
+    TallerHorarioModule,
+    CitaTallerModule,
+    TipoServicioMecanicoModule,
+    AppScheduleModule,
+    MailModule,
   ],
   controllers: [],
   providers: [],

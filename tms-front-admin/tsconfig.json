@@ -20,7 +20,7 @@
   "compilerOptions": {
     "verbatimModuleSyntax": true,
     "lib": ["es2017"],
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "noImplicitAny": false,
     "baseUrl": ".",
     "paths": {

@@ -44,7 +44,7 @@ export class Solicitud {
   metros_requeridos: number;
 
   @Column({ type: 'jsonb', nullable: true })
-  tipo_uso?: string[] | null;
+  tipo_uso?: Array<{ value: string; price?: number }> | string[] | null;
 
   @Column({ type: 'float', nullable: true })
   altura_m?: number | null;

@@ -1,0 +1,203 @@
+services:
+  # ─── Traefik con TLS local ───
+  traefik:
+    image: traefik:v3.7.8
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/certs:ro
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Redirección HTTP → HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
+      # TLS con certificados locales
+      - "--providers.file.filename=/certs/tls.yml"
+      - "--providers.file.watch=true"
+    networks:
+      - proxy
+
+  # ─── Base de datos ───
+  tms-db:
+    image: postgres:17-alpine
+    container_name: tms-db
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 2.0
+    environment:
+      POSTGRES_USER: ${DB_USER:-tms_user}
+      POSTGRES_PASSWORD: ${DB_PASS:-tms_pass}
+      POSTGRES_DB: ${DB_NAME:-tms_db}
+      TZ: America/Havana
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tms_user} -d ${DB_NAME:-tms_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - tms-network
+    security_opt:
+      - no-new-privileges:true
+
+  # ─── Adminer ───
+  adminer:
+    image: adminer:5.4.2
+    container_name: tms-adminer
+    restart: always
+    environment:
+      - TZ=America/Havana
+    depends_on:
+      - tms-db
+    networks:
+      - tms-network
+      - proxy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tmsdb.rule=Host(`tmsdb.syscargo.cu`)"
+      - "traefik.http.routers.tmsdb.entrypoints=websecure"
+      - "traefik.http.routers.tmsdb.tls=true"
+      - "traefik.http.services.tmsdb.loadbalancer.server.port=8080"
+      - "traefik.docker.network=proxy"
+    security_opt:
+      - no-new-privileges:true
+
+  # ─── Backend ───
+  backend:
+    build:
+      context: ./tms-backend
+    container_name: tms-backend
+    restart: always
+    mem_limit: 2g
+    cpus: 2.0
+    expose:
+      - "5000"
+    environment:
+      DB_HOST: tms-db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-tms_user}
+      DB_PASS: ${DB_PASS:-tms_pass}
+      DB_NAME: ${DB_NAME:-tms_db}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-change-in-prod}
+      NODE_ENV: production
+      TZ: America/Havana
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:5000/v1/origen/all"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      tms-db:
+        condition: service_healthy
+    networks:
+      - tms-network
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api-syscargo.rule=Host(`api.syscargo.cu`)"
+      - "traefik.http.routers.api-syscargo.entrypoints=websecure"
+      - "traefik.http.routers.api-syscargo.tls=true"
+      - "traefik.http.services.api-syscargo.loadbalancer.server.port=5000"
+      - "traefik.docker.network=proxy"
+    security_opt:
+      - no-new-privileges:true
+
+  # ─── Frontend Cliente ───
+  front-cliente:
+    build:
+      context: ./tms-front-cliente
+    container_name: tms-front-cliente
+    restart: always
+    mem_limit: 1g
+    cpus: 1.0
+    expose:
+      - "80"
+    environment:
+      TZ: America/Havana
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - backend
+    networks:
+      - tms-network
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.syscargo.rule=Host(`tms.syscargo.cu`)"
+      - "traefik.http.routers.syscargo.entrypoints=websecure"
+      - "traefik.http.routers.syscargo.tls=true"
+      - "traefik.http.services.syscargo.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+    security_opt:
+      - no-new-privileges:true
+
+  # ─── Frontend Admin ───
+  front-admin:
+    build:
+      context: ./tms-front-admin
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.syscargo.cu}
+    container_name: tms-front-admin
+    restart: always
+    mem_limit: 1g
+    cpus: 1.0
+    expose:
+      - "80"
+    environment:
+      TZ: America/Havana
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - backend
+    networks:
+      - tms-network
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admintms.rule=Host(`admin.syscargo.cu`)"
+      - "traefik.http.routers.admintms.entrypoints=websecure"
+      - "traefik.http.routers.admintms.tls=true"
+      - "traefik.http.services.admintms.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  tms-network:
+    driver: bridge
+  proxy:
+    external: true

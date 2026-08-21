@@ -41,6 +41,10 @@ export class AyudanteDto {
   @IsOptional()
   @IsString()
   ci?: string;
+
+  @IsOptional()
+  @IsString()
+  direccion?: string;
 }
 
 export class LicenciaDto {
@@ -110,6 +114,10 @@ export class CreatePrestatarioDto {
   @IsString()
   conditions?: string;
 
+  @IsOptional()
+  @IsBoolean()
+  defaultAereo?: boolean;
+
   // ---------------------
   // Alquiler (camelCase)
   // ---------------------
@@ -149,6 +157,31 @@ export class CreatePrestatarioDto {
   @IsNumber()
   @Type(() => Number)
   talleresCapacidadVehiculos?: number;
+
+  @IsOptional()
+  @IsString()
+  talleresDireccion?: string;
+
+  @IsOptional()
+  @IsObject()
+  talleresPrecios?: Record<string, number>;
+
+  @IsOptional()
+  @IsBoolean()
+  talleresReservaCitas?: boolean;
+
+  @IsOptional()
+  @IsString()
+  talleresHorarioInicio?: string;
+
+  @IsOptional()
+  @IsString()
+  talleresHorarioFin?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  talleresDiasDisponibles?: string[];
 
   // ---------------------
   // GPS (camelCase)

@@ -22,6 +22,8 @@ import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { randomBytes } from 'crypto';
+import { MailService } from '../mail/mail.service';
+import logger from '../common/logging/winston.config';
 
 @Injectable({})
 export class AuthService {
@@ -37,6 +39,7 @@ export class AuthService {
 
     private jwt: JwtService,
     private config: ConfigService,
+    private mailService: MailService,
 
     // @InjectModel('Parking') private readonly ModelParking: Model<Parking>,
   ) {}
@@ -50,13 +53,52 @@ export class AuthService {
     if (!user) {
       throw new ForbiddenException('User Name do not exist');
     }
-    // otherwise continue
+
+    // Check if account is locked
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const remainingTime = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+      throw new ForbiddenException(`Account locked. Try again in ${remainingTime} minutes.`);
+    }
+
+    // Reset login attempts if lock period has expired
+    if (user.lockedUntil && user.lockedUntil <= new Date()) {
+      user.loginAttempts = 0;
+      user.lockedUntil = null;
+      await this.userRepository.save(user);
+    }
+
     // compare password
     const pwMatch = await argon.verify(user.hash, dto.password);
     // if password incorrect throw an exception
     if (!pwMatch) {
+      // Increment login attempts
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
+      user.lastLoginAttempt = new Date();
+
+      // Lock account after 5 failed attempts
+      if (user.loginAttempts >= 5) {
+        user.lockedUntil = new Date(Date.now() + 30 * 60 * 1000); // Lock for 30 minutes
+        await this.userRepository.save(user);
+        
+        // Send account locked email
+        try {
+          await this.mailService.sendAccountLockedEmail(user.email);
+        } catch (emailError) {
+          logger.error('Failed to send account locked email', emailError);
+        }
+        
+        throw new ForbiddenException('Account locked due to multiple failed login attempts. Try again in 30 minutes.');
+      }
+
+      await this.userRepository.save(user);
       throw new ForbiddenException('Password incorrects.');
     }
+
+    // Reset login attempts on successful login
+    user.loginAttempts = 0;
+    user.lockedUntil = null;
+    user.lastLoginAttempt = null;
+
     // otherwise continue
     // check if user is already logged
     const role = await this.roleRepository.findOne({
@@ -287,7 +329,7 @@ export class AuthService {
 
     // Always return a generic success message to prevent user enumeration
     if (!user) {
-      console.log(`Password reset requested for non-existent email: ${email}`);
+      logger.warn(`Password reset requested for non-existent email: ${email}`);
       return;
     }
 
@@ -304,11 +346,14 @@ export class AuthService {
 
     await this.passwordResetTokenRepository.save(passwordResetToken);
 
-    // Simulate sending email (replace with actual email service)
-    console.log(`Sending password reset email to ${email} with token: ${token}`);
-    console.log(`Reset link: /reset-password?token=${token}&email=${email}`);
-    // In a real application, you would use an email service here:
-    // await this.emailService.sendResetPasswordEmail(user, token);
+    // Send password reset email
+    try {
+      await this.mailService.sendPasswordResetEmail(email, token);
+      logger.info(`Password reset email sent to ${email}`);
+    } catch (emailError) {
+      logger.error('Failed to send password reset email', emailError);
+      // Continue execution even if email fails
+    }
   }
 
   async resetPassword(token: string, email: string, newPassword: string, passwordConfirmation: string): Promise<void> {

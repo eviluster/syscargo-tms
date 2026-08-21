@@ -39,7 +39,6 @@ export class CargaController {
 
   // Listado global (puedes proteger solo admin si quieres RolesGuard)
   @Get('all')
-  @UseGuards(JwtGuard)
   async findAll() {
     return this.cargaService.findAll();
   }

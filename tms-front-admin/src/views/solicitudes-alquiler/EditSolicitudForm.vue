@@ -304,7 +304,7 @@ const accesoHorarioOptions = [
 ];
 const temperaturaOptions = ["Refrigerado", "Congelado"];
 const serviciosOptions = [
-  "Pick & Pack",
+  "Selección y embalaje",
   "Etiquetado",
   "Inspección",
   "Control de calidad",

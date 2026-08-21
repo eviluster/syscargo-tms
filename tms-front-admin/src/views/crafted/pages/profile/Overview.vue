@@ -1058,24 +1058,127 @@
 
         <!-- Rating -->
         <div class="row mb-4">
-          <label class="col-lg-4 fw-semibold text-muted"
-            >Rating de compañía</label
-          >
-          <div class="col-lg-8 d-flex align-items-center">
-            <span v-if="!editing" class="fw-bold fs-6">{{
-              prestatario?.rating ?? "-"
-            }}</span>
-            <div v-else>
-              <input
-                type="number"
-                v-model.number="draft.rating"
-                min="0"
-                max="5"
-                step="0.1"
-                class="form-control form-control-solid"
-              />
-              <small class="text-muted">0 - 5</small>
+          <label class="col-lg-4 fw-semibold text-muted">
+            Rating de compañía
+          </label>
+
+          <div class="col-lg-8">
+
+            <!-- Modo visualización -->
+            <div
+              v-if="!editing"
+              class="d-flex align-items-center"
+            >
+              <div class="me-3">
+                <i
+                  v-for="star in 5"
+                  :key="star"
+                  class="bi fs-3 me-1 rating-star"
+                  :class="
+                    star <= Math.floor(prestatario?.rating || 0)
+                      ? 'bi-star-fill text-warning'
+                      : star === Math.ceil(prestatario?.rating || 0) &&
+                        ((prestatario?.rating || 0) % 1) >= 0.5
+                      ? 'bi-star-half text-warning'
+                      : 'bi-star text-muted'
+                  "
+                />
+              </div>
+
+              <div>
+                <div class="fw-bold fs-5">
+                  {{ Number(prestatario?.rating || 0).toFixed(1) }}
+                </div>
+
+                <small class="text-muted">
+                  {{
+                    (prestatario?.rating || 0) >= 4.5
+                      ? "Excelente"
+                      : (prestatario?.rating || 0) >= 4
+                      ? "Muy bueno"
+                      : (prestatario?.rating || 0) >= 3
+                      ? "Bueno"
+                      : (prestatario?.rating || 0) >= 2
+                      ? "Regular"
+                      : (prestatario?.rating || 0) >= 1
+                      ? "Deficiente"
+                      : "Sin valoración"
+                  }}
+                </small>
+              </div>
             </div>
+
+            <!-- Modo edición -->
+            <div
+              v-else
+              class="rating-card p-3 rounded border"
+            >
+
+              <div class="d-flex align-items-center mb-3">
+
+                <i
+                  v-for="star in 5"
+                  :key="star"
+                  class="bi fs-2 me-2 rating-star"
+                  :class="
+                    star <= Math.floor(draft.rating || 0)
+                      ? 'bi-star-fill text-warning'
+                      : star === Math.ceil(draft.rating || 0) &&
+                        ((draft.rating || 0) % 1) >= 0.5
+                      ? 'bi-star-half text-warning'
+                      : 'bi-star text-muted'
+                  "
+                  @click="draft.rating = star"
+                />
+
+                <div class="ms-3">
+
+                  <div class="fw-bold fs-4">
+                    {{ Number(draft.rating || 0).toFixed(1) }}
+                  </div>
+
+                  <small class="text-muted">
+                    {{
+                      (draft.rating || 0) >= 4.5
+                        ? "Excelente"
+                        : (draft.rating || 0) >= 4
+                        ? "Muy bueno"
+                        : (draft.rating || 0) >= 3
+                        ? "Bueno"
+                        : (draft.rating || 0) >= 2
+                        ? "Regular"
+                        : (draft.rating || 0) >= 1
+                        ? "Deficiente"
+                        : "Sin valoración"
+                    }}
+                  </small>
+
+                </div>
+
+              </div>
+
+              <!-- Mantener binding -->
+              <input
+                type="hidden"
+                v-model="draft.rating"
+              />
+
+              <!-- Hint -->
+              <transition name="fade-up">
+                <div
+                  v-if="!draft.rating"
+                  class="rating-hint"
+                >
+                  <i class="bi bi-stars"></i>
+
+                  Seleccione una valoración entre
+                  <strong>0</strong> y
+                  <strong>5 estrellas</strong>.
+                </div>
+              </transition>
+
+            </div>
+
           </div>
         </div>
 
@@ -1394,7 +1497,7 @@ export default defineComponent({
     }
 
     const alquilerServicesOptions = [
-      "Pick & Pack",
+      "Selección y embalaje",
       "Etiquetado",
       "Inspección",
       "Control de calidad",
@@ -1425,7 +1528,7 @@ export default defineComponent({
     const serviciosAlojOptions = [
       { value: "desayuno", label: "Desayuno" },
       { value: "wifi", label: "Wi-Fi" },
-      { value: "parking", label: "Parking" },
+      { value: "parking", label: "Parqueo" },
       { value: "lavanderia", label: "Lavandería" },
     ];
 
@@ -1486,11 +1589,11 @@ export default defineComponent({
     async function fetchClientByUserId(userId: string) {
       try {
         const attempts = [
+          `/cliente/user/${userId}`,
+          `/cliente/${userId}`,
           `/client/user/${userId}`,
           `/client/${userId}`,
           `/users/${userId}/client`,
-          `/cliente/user/${userId}`,
-          `/cliente/${userId}`,
         ];
         for (const path of attempts) {
           try {
@@ -2170,5 +2273,117 @@ export default defineComponent({
 .badge {
   font-size: 0.8rem;
   padding: 0.35rem 0.5rem;
+}
+</style>
+<style lang="scss" scoped>
+.rating-card {
+  background: #fafafa;
+  border: 1px solid #e4e6ef;
+  border-radius: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.rating-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+}
+
+/* ===========================
+   Estrellas
+=========================== */
+
+.rating-star {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.rating-star:hover {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.rating-star:active {
+  transform: scale(1.05);
+}
+
+.rating-star.bi-star-fill,
+.rating-star.bi-star-half {
+  filter: drop-shadow(
+    0 2px 4px rgba(255, 193, 7, 0.25)
+  );
+}
+
+/* ===========================
+   Hint informativo
+=========================== */
+
+.rating-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.08),
+    rgba(255, 248, 220, 0.45)
+  );
+
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 0.75rem;
+
+  color: #6c757d;
+  font-size: 0.85rem;
+
+  animation: fadeInUp 0.5s ease;
+}
+
+.rating-hint i {
+  color: #f59e0b;
+  font-size: 1rem;
+  animation: pulseStars 2.5s infinite;
+}
+
+.rating-hint strong {
+  color: #495057;
+  font-weight: 700;
+}
+
+/* ===========================
+   Animaciones
+=========================== */
+
+.fade-up-enter-active {
+  transition: all 0.4s ease;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseStars {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
 }
 </style>

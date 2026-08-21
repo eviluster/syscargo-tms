@@ -267,7 +267,7 @@ export default function useDynamicMenu() {
       pagesArr.push(
         serviceEntry("Servicio Alojamiento", "alojamiento", hasAlojamiento),
       );
-
+      pagesArr.push(serviceEntry("Servicio Seguro", "seguro", false));      pagesArr.push(serviceEntry("Servicio ServiCUPET", "servicupet", false));
       return [
         {
           heading: "Comercializacion",
@@ -282,7 +282,7 @@ export default function useDynamicMenu() {
           ],
         },
         {
-          heading: "Mis servicios",
+          heading: "Servicios complementarios",
           route: "/prestatario/services",
           pages: pagesArr,
         },
@@ -345,7 +345,7 @@ export default function useDynamicMenu() {
               keenthemesIcon: "delivery-2",
               bootstrapIcon: "bi-truck",
               sub: [
-                {
+                /* {
                   heading: "Crear petición",
                   route: "/comercializacion/peticion/addpeticion",
                 },
@@ -353,7 +353,7 @@ export default function useDynamicMenu() {
                   heading: "Lista de peticiones",
                   route: "/comercializacion/peticion/listpeticionesCliente",
                 },
-
+*/
                 {
                   heading: "Crear órden de carga",
                   route: "/comercializacion/ordenes/addordenA",

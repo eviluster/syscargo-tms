@@ -67,7 +67,13 @@
                   </el-select>
                 </el-form-item>
               </div>
-
+              <div v-if="isPrestatario" class="fv-row mb-7">
+              <el-form-item>
+                <el-checkbox v-model="formData.defaultAereo">
+                  Prestatario por defecto para carga aérea
+                </el-checkbox>
+              </el-form-item>
+            </div>   
               <!-- Si es prestatario mostrar servicios (multi) -->
               <div v-if="isPrestatario" class="fv-row mb-7">
                 <label class="fs-6 fw-semibold mb-2">Servicios (Vías)</label>
@@ -153,6 +159,7 @@ export default defineComponent({
       email: "",
       role: "",
       servicios: [] as string[],
+      defaultAereo: false,
     });
 
     const rules = ref({
@@ -201,6 +208,10 @@ export default defineComponent({
             newUser.prestatario?.servicios ??
             newUser.servicios ??
             (Array.isArray(newUser.servicios) ? newUser.servicios : []);
+          formData.value.defaultAereo =
+            newUser.prestatario?.defaultAereo ??
+            newUser.defaultAereo ??
+            false;
         }
       },
       { immediate: true },
@@ -243,9 +254,9 @@ export default defineComponent({
 
           if (isPrestatario.value) {
             payload.servicios = formData.value.servicios;
-            // si tu backend espera prestatario.servicios dentro de un objeto prestatario:
             payload.prestatario = payload.prestatario || {};
             payload.prestatario.servicios = formData.value.servicios;
+            payload.prestatario.defaultAereo = formData.value.defaultAereo;
           }
 
           // Llamada al endpoint de edición (ajusta ruta si tu backend usa otra)

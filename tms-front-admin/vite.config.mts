@@ -12,11 +12,20 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  //base: "/metronic8/vue/demo1/",
   base: "/",
+  server: {
+    host: "0.0.0.0",
+    port: 80,
+    strictPort: true,
+    allowedHosts: ["admin.syscargo.cu", "localhost"],
+    hmr: {
+      protocol: "wss",
+      host: "admin.syscargo.cu",
+      clientPort: 443,
+    },
+  },
   build: {
     chunkSizeWarningLimit: 3000,
-    // Añadir para mejor rendimiento
     cssCodeSplit: true,
     sourcemap: false,
     minify: 'terser',

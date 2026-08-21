@@ -375,6 +375,8 @@ export default defineComponent({
 
         // construir options HTML para el select
         const currentRoleId = user.role?.id ?? user.role ?? "";
+        const defaultAereo = user.prestatario?.defaultAereo ?? false;
+
         const optionsHtml = (roles.value || [])
           .map(
             (r) =>
@@ -392,6 +394,14 @@ export default defineComponent({
               <select id="swal-role-select" class="form-control">
                 ${optionsHtml}
               </select>
+            </div>
+            <div id="swal-default-aereo-container" class="col-12 mb-2" style="display: none;">
+              <div class="form-check">
+                <input id="swal-default-aereo" type="checkbox" class="form-check-input" ${defaultAereo ? "checked" : ""}>
+                <label for="swal-default-aereo" class="form-check-label">
+                  Prestatario por defecto para carga aérea
+                </label>
+              </div>
             </div>
             <div class="col-md-6 mb-2">
               <label class="form-label">Nombre</label>
@@ -427,35 +437,38 @@ export default defineComponent({
           showCancelButton: true,
           confirmButtonText: "Guardar",
           width: "700px",
+          didOpen: () => {
+            const roleSelect = document.getElementById("swal-role-select") as HTMLSelectElement | null;
+            const defaultAereoContainer = document.getElementById("swal-default-aereo-container") as HTMLDivElement | null;
+
+            if (!roleSelect || !defaultAereoContainer) return;
+
+            const updateDefaultAereoVisibility = () => {
+              const selectedRole = roles.value.find((r) => String(r.id) === String(roleSelect.value));
+              const isPrestatario = selectedRole?.name?.toLowerCase() === "prestatario";
+              defaultAereoContainer.style.display = isPrestatario ? "block" : "none";
+            };
+
+            roleSelect.addEventListener("change", updateDefaultAereoVisibility);
+            updateDefaultAereoVisibility();
+          },
           preConfirm: () => {
-            const name = (
-              document.getElementById("swal-name") as HTMLInputElement
-            ).value;
-            const lastname = (
-              document.getElementById("swal-lastname") as HTMLInputElement
-            ).value;
-            const email = (
-              document.getElementById("swal-email") as HTMLInputElement
-            ).value;
-            const phone = (
-              document.getElementById("swal-phone") as HTMLInputElement
-            ).value;
-            const username = (
-              document.getElementById("swal-username") as HTMLInputElement
-            ).value;
-            const password = (
-              document.getElementById("swal-password") as HTMLInputElement
-            ).value;
-            const role = (
-              document.getElementById("swal-role-select") as HTMLSelectElement
-            ).value;
+            const name = (document.getElementById("swal-name") as HTMLInputElement).value;
+            const lastname = (document.getElementById("swal-lastname") as HTMLInputElement).value;
+            const email = (document.getElementById("swal-email") as HTMLInputElement).value;
+            const phone = (document.getElementById("swal-phone") as HTMLInputElement).value;
+            const username = (document.getElementById("swal-username") as HTMLInputElement).value;
+            const password = (document.getElementById("swal-password") as HTMLInputElement).value;
+            const role = (document.getElementById("swal-role-select") as HTMLSelectElement).value;
+
+            const defaultAereo = (document.getElementById("swal-default-aereo") as HTMLInputElement | null)?.checked ?? false;
 
             if (!name || !email) {
               Swal.showValidationMessage("Nombre y email son requeridos");
               return;
             }
 
-            return { name, lastname, email, phone, username, password, role };
+            return { name, lastname, email, phone, username, password, role, defaultAereo };
           },
         });
 
@@ -482,6 +495,13 @@ export default defineComponent({
 
         const id = user.id;
         await api.put(`/users/edit/${id}`, payload);
+        
+        const prestatarioResponse = await api.get(`/prestatario/user/${id}`);
+        const prestatarioId = prestatarioResponse.data.id;
+
+        await api.put(`/prestatario/${prestatarioId}`, {
+          defaultAereo: result.value.defaultAereo,
+        });
 
         await fetchUsuarios();
         Swal.close();

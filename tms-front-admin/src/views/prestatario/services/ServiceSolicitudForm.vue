@@ -14,7 +14,7 @@
         <div class="row g-3">
           <!-- Renderizamos campos (comunes + específicos) -->
           <div
-            v-for="field in combinedFormFields"
+            v-for="field in visibleFormFields"
             :key="field.name"
             :class="fieldColClass"
           >
@@ -23,43 +23,65 @@
               <span v-if="field.required" class="text-danger">*</span>
             </label>
 
+            <!-- Checkbox para tipo boolean -->
+            <div v-if="field.type === 'boolean'" class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                :id="field.name"
+                v-model="form[field.name]"
+                :required="field.required ?? false"
+              />
+              <label class="form-check-label" :for="field.name">
+                {{ form[field.name] ? 'Activado' : 'Desactivado' }}
+              </label>
+            </div>
+
             <input
-              v-if="field.type === 'text'"
+              v-else-if="field.type === 'text'"
               type="text"
               class="form-control"
               v-model="form[field.name]"
               :placeholder="field.placeholder"
+              :readonly="field.name === 'direccion_taller_fija'"
+              :disabled="field.name === 'direccion_taller_fija'"
             />
 
-            <input
-              v-else-if="field.type === 'number'"
-              type="number"
-              class="form-control"
-              v-model.number="form[field.name]"
-              :placeholder="field.placeholder"
-            />
+            <div v-else-if="field.type === 'number'" class="input-group">
+              <span class="input-group-text">$</span>
+              <input
+                type="number"
+                class="form-control"
+                v-model.number="form[field.name]"
+                :placeholder="field.placeholder"
+                step="0.01"
+                min="0"
+              />
+            </div>
 
             <select
               v-else-if="field.type === 'select'"
               class="form-select"
               v-model="form[field.name]"
               :multiple="field.multiple ?? false"
+              @change="onTipoTrabajoChange(field)"
             >
               <option v-if="!field.multiple" value="" disabled>
                 Selecciona...
               </option>
               <option
-                v-for="opt in field.options || []"
-                :key="opt"
-                :value="opt"
+                v-for="opt in getOpcionesConPrecio(field)"
+                :key="typeof opt === 'string' ? opt : opt.value"
+                :value="typeof opt === 'string' ? opt : opt.value"
               >
-                {{ opt }}
+                {{ typeof opt === 'string' ? opt : opt.label }} 
+                <span v-if="typeof opt !== 'string' && opt.precio">(${{ Number(opt.precio).toFixed(2) }})</span>
               </option>
             </select>
 
             <input
               v-else-if="field.type === 'date'"
-              type="date"
+              type="datetime-local"
               class="form-control"
               v-model="form[field.name]"
             />
@@ -70,11 +92,46 @@
               v-model="form[field.name]"
             ></textarea>
 
+            <div v-if="field.helpText" class="form-text text-muted">
+              {{ field.helpText }}
+            </div>
+
             <div
               class="invalid-feedback d-block"
               v-if="submitted && field.required && !hasValue(form[field.name])"
             >
               Requerido
+            </div>
+          </div>
+
+          <!-- Sección de precios configurados -->
+          <div v-if="serviceKey === 'taller' && preciosTaller.length > 0" class="col-12">
+            <div class="card bg-light">
+              <div class="card-header">
+                <h6 class="mb-0">Precios configurados para servicios del taller</h6>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Servicio</th>
+                        <th>Tipo</th>
+                        <th>Precio Base</th>
+                        <th>Tiempo Estimado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="precio in preciosTaller" :key="precio.id">
+                        <td>{{ precio.nombre_personalizado }}</td>
+                        <td>{{ precio.tipo_servicio || 'N/A' }}</td>
+                        <td>${{ Number(precio.precio_base).toFixed(2) }}</td>
+                        <td>{{ precio.tiempo_estimado_minutos }} min</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -119,6 +176,79 @@ const config = computed(
   () => SERVICES[serviceKey.value] ?? SERVICES["alquiler"],
 );
 
+// Estado para precios del taller
+const preciosTaller = ref<any[]>([]);
+const prestatarioId = ref<string | null>(null);
+const precioEstimado = ref<number>(0);
+
+/**
+ * Obtiene las opciones de un campo con precios actualizados desde el backend
+ */
+function getOpcionesConPrecio(field: any) {
+  if (serviceKey.value !== 'taller' || field.name !== 'tipo_uso') {
+    return field.options || [];
+  }
+  
+  // Si hay precios del taller, mapear las opciones con sus precios
+  if (preciosTaller.value.length > 0) {
+    return (field.options || []).map((opt: any) => {
+      const valorOpt = typeof opt === 'string' ? opt : opt.value;
+      // Buscar si existe un servicio del taller que coincida con el tipo de trabajo
+      const servicioTaller = preciosTaller.value.find(
+        s => s.tipo_servicio?.toLowerCase() === valorOpt.toLowerCase() ||
+             s.nombre_personalizado?.toLowerCase() === valorOpt.toLowerCase()
+      );
+      
+      if (servicioTaller) {
+        return {
+          ...opt,
+          label: typeof opt === 'string' ? opt : (opt.label || opt.value),
+          precio: servicioTaller.precio_base
+        };
+      }
+      
+      return {
+        ...opt,
+        label: typeof opt === 'string' ? opt : (opt.label || opt.value),
+        precio: opt.price || 0
+      };
+    });
+  }
+  
+  return field.options || [];
+}
+
+/**
+ * Maneja el cambio en el campo tipo_uso para actualizar el precio estimado
+ */
+function onTipoTrabajoChange(field: any) {
+  if (field.name !== 'tipo_uso' || serviceKey.value !== 'taller') {
+    return;
+  }
+  
+  const valorSeleccionado = form.value[field.name];
+  if (!valorSeleccionado) {
+    precioEstimado.value = 0;
+    return;
+  }
+  
+  // Buscar el precio en los servicios del taller
+  const servicioEncontrado = preciosTaller.value.find(
+    s => s.tipo_servicio?.toLowerCase() === valorSeleccionado.toLowerCase() ||
+         s.nombre_personalizado?.toLowerCase() === valorSeleccionado.toLowerCase()
+  );
+  
+  if (servicioEncontrado) {
+    precioEstimado.value = Number(servicioEncontrado.precio_base) || 0;
+  } else {
+    // Fallback a la opción original si no se encuentra en el backend
+    const opcionOriginal = (field.options || []).find(
+      (opt: any) => (typeof opt === 'string' ? opt : opt.value) === valorSeleccionado
+    );
+    precioEstimado.value = typeof opcionOriginal === 'object' ? (opcionOriginal.price || 0) : 0;
+  }
+}
+
 /**
  * Campos comunes
  */
@@ -145,6 +275,40 @@ const combinedFormFields = computed(() => {
   ];
   // si no existe campo fecha_fin y el servicio define fechas, se asegura en config
   return merged;
+});
+
+// Campos visibles según si escatolina está activado
+const visibleFormFields = computed(() => {
+  const isEscatolina = form.value.es_servicio_escatolina === true;
+  
+  if (serviceKey.value !== 'taller') {
+    return combinedFormFields.value;
+  }
+  
+  // Para taller, filtrar campos condicionales de escatolina
+  return combinedFormFields.value.filter((field: any) => {
+    // Campos que siempre se muestran
+    const alwaysVisible = [
+      'tipo_uso', 'es_servicio_escatolina', 'fecha_hora_inicio',
+      'direccion_taller_fija', 'vehiculo_marca', 'vehiculo_placa', 'comentarios'
+    ];
+    
+    if (alwaysVisible.includes(field.name)) {
+      return true;
+    }
+    
+    // Campos de escatolina solo se muestran si está activado
+    const escatolinaFields = [
+      'origen_id', 'destino_id', 'tipo_carga_id', 'peso_kg',
+      'volumen_m3', 'tipo_transporte_id', 'fecha_estimada_viaje', 'licencia_operativa'
+    ];
+    
+    if (escatolinaFields.includes(field.name)) {
+      return isEscatolina;
+    }
+    
+    return true;
+  });
 });
 
 const form = ref<Record<string, any>>({});
@@ -263,9 +427,43 @@ async function getPrestatarioIdFromCookie() {
     const res = await api.get(
       `/prestatario/user/${encodeURIComponent(String(userId))}`,
     );
-    return (res?.data?.data ?? res?.data ?? res)?.id ?? null;
+    const prestatario = (res?.data?.data ?? res?.data ?? res);
+    prestatarioId.value = prestatario?.id ?? null;
+    return prestatarioId.value;
   } catch (e) {
     return null;
+  }
+}
+
+// Cargar precios del taller
+async function loadPreciosTaller() {
+  if (serviceKey.value !== 'taller' || !prestatarioId.value) {
+    return;
+  }
+  
+  try {
+    const res = await api.get(`/taller-servicios/prestatario/${prestatarioId.value}`);
+    preciosTaller.value = (res?.data?.data ?? res?.data ?? []) || [];
+  } catch (e) {
+    console.error('Error cargando precios del taller:', e);
+    preciosTaller.value = [];
+  }
+}
+
+// Cargar dirección fija del taller
+async function loadDireccionTaller() {
+  if (serviceKey.value !== 'taller' || !prestatarioId.value) {
+    return;
+  }
+  
+  try {
+    const res = await api.get(`/prestatario/${prestatarioId.value}`);
+    const prestatario = res?.data?.data ?? res?.data ?? res;
+    if (prestatario?.taller_direccion?.direccion_completa) {
+      form.value.direccion_taller_fija = prestatario.taller_direccion.direccion_completa;
+    }
+  } catch (e) {
+    console.error('Error cargando dirección del taller:', e);
   }
 }
 
@@ -287,6 +485,12 @@ function cleanPayload(raw: Record<string, any>) {
     p[k] = v;
   }
   if (!p.serviceRequested) p.serviceRequested = serviceKey.value;
+  
+  // Agregar precio estimado para taller
+  if (serviceKey.value === 'taller' && precioEstimado.value > 0) {
+    p.precio_total = precioEstimado.value;
+  }
+  
   return p;
 }
 
@@ -356,9 +560,14 @@ function cancel() {
 /* watchers */
 watch(
   () => props.serviceKey,
-  () => {
+  async () => {
     initFormFromConfig();
     if (props.initialData) populateFormFromInitialData();
+    // Recargar datos del taller cuando cambia el serviceKey
+    if (prestatarioId.value) {
+      await loadPreciosTaller();
+      await loadDireccionTaller();
+    }
   },
   { immediate: true },
 );
@@ -371,9 +580,27 @@ watch(
   { immediate: true },
 );
 
-onMounted(() => {
+// Watch para prestatarioId - cargar datos cuando esté disponible
+watch(
+  () => prestatarioId.value,
+  async (newId) => {
+    if (newId && serviceKey.value === 'taller') {
+      await loadPreciosTaller();
+      await loadDireccionTaller();
+    }
+  },
+  { immediate: false },
+);
+
+onMounted(async () => {
   initFormFromConfig();
   if (props.initialData) populateFormFromInitialData();
+  // Obtener prestatario ID y cargar datos
+  const pId = await getPrestatarioIdFromCookie();
+  if (pId && serviceKey.value === 'taller') {
+    await loadPreciosTaller();
+    await loadDireccionTaller();
+  }
 });
 </script>
 

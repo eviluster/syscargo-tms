@@ -6,11 +6,16 @@ import {
   JoinColumn,
   Index,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 import { BasicEntity } from 'src/common/base/entities/basic.entity';
 import { User } from 'src/user/entities/user.entity';
 import { ViaMode } from 'src/carga/enum/vias';
 import { Solicitud } from 'src/solicitudes/solicitudes.entity';
+import { TallerServicio } from 'src/taller-servicio/entities/taller-servicio.entity';
+import { TallerHorario } from 'src/taller-horario/entities/taller-horario.entity';
+import { CitaTaller } from 'src/cita-taller/entities/cita-taller.entity';
+import { AddressDetail } from 'src/address-details/entities/address-detail.entity';
 
 export enum TipoCarga {
   SECO = 'Seco',
@@ -20,6 +25,8 @@ export enum TipoCarga {
 export enum Contenedor {
   C20 = '20',
   C40 = '40',
+  ISOTANQUE_20 = 'Isotanque de 20"',
+  ISOTANQUE_40 = 'Isotanque de 40"',
 }
 
 @Entity('prestatario')
@@ -47,7 +54,7 @@ export class Prestatario extends BasicEntity {
   }>;
 
   @Column({ type: 'jsonb', nullable: true })
-  ayudantes?: Array<{ nombre?: string; apellidos?: string; ci?: string }>;
+  ayudantes?: Array<{ nombre?: string; apellidos?: string; ci?: string; direccion?: string }>;
 
   @Column({ type: 'jsonb', nullable: true })
   cargasEspeciales?: string[];
@@ -69,6 +76,9 @@ export class Prestatario extends BasicEntity {
 
   @Column({ type: 'enum', enum: ViaMode, array: true, nullable: true })
   servicios?: ViaMode[];
+
+  @Column({ name: 'default_aereo', type: 'boolean', default: false })
+  defaultAereo?: boolean;
 
   @Column({ type: 'text', nullable: true })
   conditions?: string;
@@ -105,6 +115,24 @@ export class Prestatario extends BasicEntity {
 
   @Column({ type: 'numeric', nullable: true })
   talleresCapacidadVehiculos?: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  talleresDireccion?: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  talleresPrecios?: Record<string, number> | null;
+
+  @Column({ type: 'boolean', default: false })
+  talleresReservaCitas?: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  talleresHorarioInicio?: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  talleresHorarioFin?: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  talleresDiasDisponibles?: string[] | null;
 
   // GPS
   @Column({ type: 'jsonb', nullable: true })
@@ -184,4 +212,38 @@ export class Prestatario extends BasicEntity {
     radioKm?: number;
     coordenadas?: { lat: number; lng: number };
   } | null;
+
+  /**
+   * Campos para funcionalidad de Taller
+   */
+  @Column({ type: 'boolean', default: false })
+  es_taller: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  tiene_escatolina: boolean;
+
+  @ManyToOne(() => AddressDetail, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'taller_direccion_id' })
+  taller_direccion: AddressDetail;
+
+  @Column({ type: 'int', nullable: true })
+  capacidad_simultanea: number;
+
+  @Column({ type: 'boolean', default: true })
+  requiere_aprobacion_citas: boolean;
+
+  /**
+   * Relaciones con entidades de Taller
+   */
+  @OneToMany(() => TallerServicio, (servicio) => servicio.prestatario)
+  serviciosTaller: TallerServicio[];
+
+  @OneToMany(() => TallerHorario, (horario) => horario.prestatario)
+  horariosTaller: TallerHorario[];
+
+  @OneToMany(() => CitaTaller, (cita) => cita.taller)
+  citasComoTaller: CitaTaller[];
+
+  @OneToMany(() => CitaTaller, (cita) => cita.cliente)
+  citasComoCliente: CitaTaller[];
 }

@@ -294,6 +294,12 @@
                   Chapa: {{ t.chapa || "-" }} · Tipo:
                   {{ t.tipoTransporte || "-" }}
                 </div>
+                <div v-if="(t.cargasEspeciales || []).length" class="small text-muted mt-1">
+                  <strong>Cargas especiales:</strong>
+                  <span v-for="(c, i) in t.cargasEspeciales" :key="i" class="badge bg-light text-dark me-1 mb-1">
+                    {{ c }}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -303,7 +309,15 @@
                 :key="'edit-t-' + idx"
                 class="border rounded p-2 mb-2 position-relative"
               >
-                <div class="row">
+                <button
+                  class="btn btn-sm btn-link text-danger position-absolute"
+                  style="top: 8px; right: 8px"
+                  @click="removeTransport(idx)"
+                >
+                  Eliminar
+                </button>
+                
+                <div class="row mb-2">
                   <div class="col-4">
                     <input
                       v-model="t.nombreChofer"
@@ -332,13 +346,42 @@
                   </div>
                 </div>
 
-                <button
-                  class="btn btn-sm btn-link text-danger position-absolute"
-                  style="top: 8px; right: 8px"
-                  @click="removeTransport(idx)"
-                >
-                  Eliminar
-                </button>
+                <!-- Cargas Especiales por transporte -->
+                <div class="mt-3">
+                  <label class="form-label fs-7 fw-semibold">Cargas Especiales (este transporte)</label>
+                  <div
+                    v-for="(c, i) in t.cargasEspeciales"
+                    :key="'te-' + idx + '-ce-' + i"
+                    class="input-group mb-2"
+                  >
+                    <input
+                      v-model="t.cargasEspeciales[i]"
+                      class="form-control form-control-solid"
+                      placeholder="Tipo de carga especial"
+                    />
+                    <button
+                      class="btn btn-danger btn-sm"
+                      @click="removeCargaEspecialTransporte(idx, i)"
+                      type="button"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <input
+                      v-model="t.nuevaCargaEspecial"
+                      class="form-control form-control-solid"
+                      placeholder="Nueva carga especial"
+                    />
+                    <button
+                      class="btn btn-success btn-sm"
+                      @click="addCargaEspecialTransporte(idx)"
+                      type="button"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <button class="btn btn-sm btn-success" @click="addTransport">
@@ -379,27 +422,47 @@
   <label class="col-lg-4 fw-semibold text-muted">Contenedor</label>
   <div class="col-lg-8 d-flex align-items-center">
     <span v-if="!editing" class="fw-bold fs-6">
-      {{ prestatario?.contenedor ? prestatario.contenedor + ' pies' : "-" }}
+      {{ prestatario?.contenedor ? formatContenedorDisplay(prestatario.contenedor) : "-" }}
     </span>
 
     <div v-else style="width: 100%">
       <div class="row g-2">
-        <div class="col-md-4">
-          <label class="form-label fs-7">Capacidad del contenedor</label>
-          <select
-            v-model="draft.contenedor"
-            class="form-control form-control-solid"
-          >
-            <option value="">Seleccione</option>
-            <option>20 pies</option>
-            <option>40 pies</option>
-          </select>
-          <small class="text-muted d-block mt-1">
-            Tamaño estándar del contenedor en pies
-          </small>
-        </div>
+        <!-- Mostrar selector de tipo de contenedor y checkbox solo si NO es Carga general -->
+        <template v-if="draft.tipoCarga !== 'Carga general'">
+          <div class="col-md-4">
+            <label class="form-label fs-7">Tipo de contenedor</label>
+            <select
+              v-model="draft.contenedor"
+              class="form-control form-control-solid"
+            >
+              <option value="">Seleccione</option>
+              <option>20 pies</option>
+              <option>40 pies</option>
+              <option>Isotanque de 20"</option>
+              <option>Isotanque de 40"</option>
+            </select>
+            <small class="text-muted d-block mt-1">
+              Seleccione el tipo de contenedor
+            </small>
+          </div>
 
-        <div class="col-md-4">
+          <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">
+              <input
+                v-model="draft.autorizaIsotanquePeligrosas"
+                type="checkbox"
+                class="form-check-input"
+                id="autorizaIsotanquePeligrosas"
+              />
+              <label class="form-check-label fs-7" for="autorizaIsotanquePeligrosas">
+                Autorizo a transportar Isotanque de sustancias peligrosas
+              </label>
+            </div>
+          </div>
+        </template>
+
+        <!-- Campos de peso y volumen siempre visibles (o solo estos si es Carga general) -->
+        <div :class="draft.tipoCarga === 'Carga general' ? 'col-md-6' : 'col-md-4'">
           <label class="form-label fs-7">Peso máximo soportado</label>
           <input
             v-model.number="draft.maxWeight"
@@ -413,7 +476,7 @@
           </small>
         </div>
 
-        <div class="col-md-4">
+        <div :class="draft.tipoCarga === 'Carga general' ? 'col-md-6' : 'col-md-4'">
           <label class="form-label fs-7">Volumen máximo disponible</label>
           <input
             v-model.number="draft.maxVolume"
@@ -596,7 +659,7 @@
         <!-- ALQUILER: vista + edición -->
         <div class="row mb-4">
           <label class="col-lg-4 fw-semibold text-muted"
-            >Alquiler de almacenes</label
+            >Operador Logístico</label
           >
           <div class="col-lg-8">
             <div v-if="!editing">
@@ -629,7 +692,7 @@
                   v-model="draft.offersAlquiler"
                 />
                 <label class="form-check-label" for="offersAlquilerSwitch">
-                  Presto servicios de Alquiler de almacenes
+                  Presto servicios de Operador Logístico
                 </label>
               </div>
 
@@ -703,13 +766,20 @@
                 <div class="small text-muted">
                   Horario: {{ prestatario?.talleresHorario || "-" }}
                 </div>
+                <div class="small text-muted">
+                  Dirección: {{ prestatario?.talleresDireccion || "-" }}
+                </div>
                 <div class="mt-2">
-                  <span
+                  <div
                     v-for="(s, i) in prestatario?.talleresServicios || []"
                     :key="i"
                     class="badge bg-light text-dark me-1"
-                    >{{ s }}</span
                   >
+                    {{ s }}
+                    <span v-if="prestatario?.talleresPrecios?.[s]" class="ms-1">
+                      ({{ prestatario.talleresPrecios[s] }})
+                    </span>
+                  </div>
                 </div>
                 <div class="small text-muted mt-1">
                   Capacidad vehículos:
@@ -739,12 +809,21 @@
               </div>
 
               <div class="mt-2">
-                <label class="form-label fs-7">Servicios ofrecidos</label>
+                <label class="form-label fs-7">Dirección del taller</label>
+                <input
+                  v-model="draft.talleresDireccion"
+                  class="form-control form-control-solid"
+                  placeholder="Dirección completa del taller"
+                />
+              </div>
+
+              <div class="mt-2">
+                <label class="form-label fs-7">Servicios ofrecidos y precios</label>
                 <div class="d-flex flex-wrap gap-2 mt-2">
                   <div
                     v-for="opt in talleresOptions"
                     :key="opt.value"
-                    class="form-check"
+                    class="form-check align-items-center"
                   >
                     <input
                       class="form-check-input"
@@ -754,10 +833,20 @@
                       v-model="draft.talleresServicios"
                     />
                     <label
-                      class="form-check-label"
+                      class="form-check-label me-2"
                       :for="'taller-' + opt.value"
                       >{{ opt.label }}</label
                     >
+                    <input
+                      v-if="draft.talleresServicios.includes(opt.value)"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="form-control form-control-solid form-control-sm"
+                      style="width: 100px; display: inline-block;"
+                      v-model.number="draft.talleresPrecios[opt.value]"
+                      placeholder="Precio"
+                    />
                   </div>
                 </div>
               </div>
@@ -772,6 +861,111 @@
                   class="form-control form-control-solid"
                   v-model.number="draft.talleresCapacidadVehiculos"
                 />
+              </div>
+
+              <!-- Servicios Complementarios - Reserva -->
+              <div class="mt-3 border rounded p-3">
+                <label class="form-label fs-7 fw-semibold">Servicios Complementarios</label>
+                <div class="form-check mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="talleresReservaCitas"
+                    v-model="draft.talleresReservaCitas"
+                  />
+                  <label class="form-check-label" for="talleresReservaCitas">
+                    Permitir reserva de citas
+                  </label>
+                </div>
+
+                <div v-if="draft.talleresReservaCitas" class="mt-2">
+                  <div class="row g-2">
+                    <div class="col-md-6">
+                      <label class="form-label fs-7">Horario inicio</label>
+                      <input
+                        type="time"
+                        v-model="draft.talleresHorarioInicio"
+                        class="form-control form-control-solid"
+                      />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fs-7">Horario fin</label>
+                      <input
+                        type="time"
+                        v-model="draft.talleresHorarioFin"
+                        class="form-control form-control-solid"
+                      />
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <label class="form-label fs-7">Días disponibles</label>
+                    <div class="d-flex flex-wrap gap-2">
+                      <label class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value="lunes"
+                          v-model="draft.talleresDiasDisponibles"
+                        />
+                        <span class="form-check-label">Lunes</span>
+                      </label>
+                      <label class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value="martes"
+                          v-model="draft.talleresDiasDisponibles"
+                        />
+                        <span class="form-check-label">Martes</span>
+                      </label>
+                      <label class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value="miercoles"
+                          v-model="draft.talleresDiasDisponibles"
+                        />
+                        <span class="form-check-label">Miércoles</span>
+                      </label>
+                      <label class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value="jueves"
+                          v-model="draft.talleresDiasDisponibles"
+                        />
+                        <span class="form-check-label">Jueves</span>
+                      </label>
+                      <label class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value="viernes"
+                          v-model="draft.talleresDiasDisponibles"
+                        />
+                        <span class="form-check-label">Viernes</span>
+                      </label>
+                      <label class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value="sabado"
+                          v-model="draft.talleresDiasDisponibles"
+                        />
+                        <span class="form-check-label">Sábado</span>
+                      </label>
+                      <label class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value="domingo"
+                          v-model="draft.talleresDiasDisponibles"
+                        />
+                        <span class="form-check-label">Domingo</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1056,24 +1250,102 @@
 
         <!-- Rating -->
         <div class="row mb-4">
-          <label class="col-lg-4 fw-semibold text-muted"
-            >Rating de compañía</label
-          >
-          <div class="col-lg-8 d-flex align-items-center">
-            <span v-if="!editing" class="fw-bold fs-6">{{
-              prestatario?.rating ?? "-"
-            }}</span>
-            <div v-else>
-              <input
-                type="number"
-                v-model.number="draft.rating"
-                min="0"
-                max="5"
-                step="0.1"
-                class="form-control form-control-solid"
-              />
-              <small class="text-muted">0 - 5</small>
+          <label class="col-lg-4 fw-semibold text-muted">
+            Rating de compañía
+          </label>
+
+          <div class="col-lg-8">
+
+            <!-- Modo visualización -->
+            <div
+              v-if="!editing"
+              class="d-flex align-items-center"
+            >
+              <div class="me-3">
+                <i
+                  v-for="star in 5"
+                  :key="star"
+                  class="bi fs-3 me-1 rating-star"
+                  :class="
+                    star <= Math.floor(prestatario?.rating || 0)
+                      ? 'bi-star-fill text-warning'
+                      : star === Math.ceil(prestatario?.rating || 0) &&
+                        ((prestatario?.rating || 0) % 1) >= 0.5
+                      ? 'bi-star-half text-warning'
+                      : 'bi-star text-muted'
+                  "
+                />
+              </div>
+
+              <div>
+                <div class="fw-bold fs-5">
+                  {{ Number(prestatario?.rating || 0).toFixed(1) }}
+                </div>
+
+                <small class="text-muted">
+                  {{
+                    (prestatario?.rating || 0) >= 4.5
+                      ? "Excelente"
+                      : (prestatario?.rating || 0) >= 4
+                      ? "Muy bueno"
+                      : (prestatario?.rating || 0) >= 3
+                      ? "Bueno"
+                      : (prestatario?.rating || 0) >= 2
+                      ? "Regular"
+                      : (prestatario?.rating || 0) >= 1
+                      ? "Deficiente"
+                      : "Sin valoración"
+                  }}
+                </small>
+              </div>
             </div>
+
+            <!-- Modo edición -->
+            <div v-else>
+
+              <div class="d-flex align-items-center mb-3">
+
+                <i
+                  v-for="star in 5"
+                  :key="star"
+                  class="bi fs-2 me-2 rating-star"
+                  :class="
+                    star <= Math.floor(draft.rating || 0)
+                      ? 'bi-star-fill text-warning'
+                      : star === Math.ceil(draft.rating || 0) &&
+                        ((draft.rating || 0) % 1) >= 0.5
+                      ? 'bi-star-half text-warning'
+                      : 'bi-star text-muted'
+                  "
+                  @click="draft.rating = star"
+                />
+
+                <span class="fw-bold fs-4 ms-2">
+                  {{ Number(draft.rating || 0).toFixed(1) }}
+                </span>
+
+              </div>
+
+              <!-- Input oculto -->
+              <input
+                type="hidden"
+                v-model="draft.rating"
+              />
+
+              <!-- Hint -->
+              <transition name="fade-up">
+                <div class="rating-hint">
+                  <i class="bi bi-stars"></i>
+
+                  Puede utilizar valoraciones exactas como
+                  <strong>3.5</strong>,
+                  <strong>4.2</strong> o
+                  <strong>4.8</strong>.
+                </div>
+              </transition>
+
+            </div>
+
           </div>
         </div>
 
@@ -1125,6 +1397,7 @@
                 >
                   <div class="fw-bold">{{ h.nombre }} {{ h.apellidos }}</div>
                   <div class="small text-muted">CI: {{ h.ci }}</div>
+                  <div v-if="h.direccion" class="small text-muted">Dirección: {{ h.direccion }}</div>
                 </div>
               </div>
             </div>
@@ -1149,6 +1422,11 @@
                   v-model="h.ci"
                   class="form-control form-control-solid"
                   placeholder="CI"
+                />
+                <input
+                  v-model="h.direccion"
+                  class="form-control form-control-solid"
+                  placeholder="Dirección"
                 />
                 <button
                   class="btn btn-danger"
@@ -1186,6 +1464,8 @@ type Transporte = {
   nombreChofer?: string;
   chapa?: string;
   tipoTransporte?: string;
+  cargasEspeciales?: string[];
+  nuevaCargaEspecial?: string;
 };
 
 type Ayudante = {
@@ -1214,6 +1494,7 @@ export default defineComponent({
       transportes: [] as Transporte[],
       tipoCarga: "",
       contenedor: "",
+      autorizaIsotanquePeligrosas: false,
       maxWeight: null as number | null,
       maxVolume: null as number | null,
       cargasEspeciales: [] as string[],
@@ -1243,6 +1524,12 @@ export default defineComponent({
       talleresHorario: "" as string,
       talleresServicios: [] as string[],
       talleresCapacidadVehiculos: null as number | null,
+      talleresDireccion: "" as string,
+      talleresPrecios: {} as Record<string, number>,
+      talleresReservaCitas: false,
+      talleresHorarioInicio: "" as string,
+      talleresHorarioFin: "" as string,
+      talleresDiasDisponibles: [] as string[],
 
       // gps
       providesGPS: false,
@@ -1281,7 +1568,8 @@ export default defineComponent({
       { value: "aerea", label: "Aérea" },
       { value: "terrestre", label: "Terrestre" },
       { value: "ferroviaria", label: "Ferroviaria" },
-      { value: "multimodal", label: "Multimodal" },
+      { value: "ultima_milla", label: "Última Milla" },
+      { value: "escatolina", label: "Escatolina" },
     ];
 
     const viaCanonicalValues = new Set(viaOptions.map((o) => o.value));
@@ -1298,7 +1586,10 @@ export default defineComponent({
         aerea: "aerea",
         terrestre: "terrestre",
         ferroviaria: "ferroviaria",
-        multimodal: "multimodal",
+        "última milla": "ultima_milla",
+        "ultima milla": "ultima_milla",
+        multimodal: "ultima_milla", // Mantenido para compatibilidad con datos antiguos
+        escatolina: "escatolina",
       };
       return map[raw] ?? raw;
     }
@@ -1313,9 +1604,22 @@ export default defineComponent({
       return [...new Set(out)];
     }
 
+    function formatContenedorDisplay(valor: string): string {
+      if (!valor) return "-";
+      // Si es un isotanque, mostrar tal cual
+      if (valor.includes("Isotanque")) {
+        return valor;
+      }
+      // Para los valores antiguos (20, 40), agregar "pies"
+      return valor + " pies";
+    }
+
     function serviciosIncluyeTerrestre(servicios: unknown): boolean {
       const arr = Array.isArray(servicios) ? servicios : [];
-      return arr.some((x) => normalizeServicioVia(x) === "terrestre");
+      return arr.some((x) => {
+        const normalized = normalizeServicioVia(x);
+        return normalized === "terrestre" || normalized === "escatolina";
+      });
     }
 
     function mergePrecioTerrestreFromSource(src: any) {
@@ -1374,7 +1678,10 @@ export default defineComponent({
     }
 
     const alquilerServicesOptions = [
-      "Pick & Pack",
+      "Almacén Seco",
+      "Almacén Refrigerado",
+      "Patio a Cielo Abierto",
+      "Selección y embalaje",
       "Etiquetado",
       "Inspección",
       "Control de calidad",
@@ -1405,7 +1712,7 @@ export default defineComponent({
     const serviciosAlojOptions = [
       { value: "desayuno", label: "Desayuno" },
       { value: "wifi", label: "Wi-Fi" },
-      { value: "parking", label: "Parking" },
+      { value: "parking", label: "Parqueo" },
       { value: "lavanderia", label: "Lavandería" },
     ];
 
@@ -1466,11 +1773,11 @@ export default defineComponent({
     async function fetchClientByUserId(userId: string) {
       try {
         const attempts = [
+          `/cliente/user/${userId}`,
+          `/cliente/${userId}`,
           `/client/user/${userId}`,
           `/client/${userId}`,
           `/users/${userId}/client`,
-          `/cliente/user/${userId}`,
-          `/cliente/${userId}`,
         ];
         for (const path of attempts) {
           try {
@@ -1567,12 +1874,14 @@ export default defineComponent({
         nombre: h.nombre || "",
         apellidos: h.apellidos || "",
         ci: h.ci || "",
+        direccion: h.direccion || "",
       }));
 
       const mw = s.maxWeight ?? s.max_weight ?? null;
       const mv = s.maxVolume ?? s.max_volume ?? null;
       draft.maxWeight = mw != null ? Number(mw) : null;
       draft.maxVolume = mv != null ? Number(mv) : null;
+      draft.autorizaIsotanquePeligrosas = s.autorizaIsotanquePeligrosas ?? false;
 
       draft.servicios = normalizeServiciosList(
         Array.isArray(s.servicios)
@@ -1660,6 +1969,8 @@ export default defineComponent({
         nombreChofer: t.nombreChofer || "",
         chapa: t.chapa || "",
         tipoTransporte: t.tipoTransporte || "",
+        cargasEspeciales: Array.isArray(t.cargasEspeciales) ? [...t.cargasEspeciales] : [],
+        nuevaCargaEspecial: "",
       }));
       draft.tipoCarga = p.tipoCarga ?? p.tipo_carga ?? "";
       draft.contenedor = p.contenedor ?? "";
@@ -1677,9 +1988,11 @@ export default defineComponent({
         nombre: h.nombre || "",
         apellidos: h.apellidos || "",
         ci: h.ci || "",
+        direccion: h.direccion || "",
       }));
       draft.maxWeight = p.maxWeight ?? p.max_weight ?? null;
       draft.maxVolume = p.maxVolume ?? p.max_volume ?? null;
+      draft.autorizaIsotanquePeligrosas = p.autorizaIsotanquePeligrosas ?? false;
       draft.servicios = normalizeServiciosList(p.servicios);
       mergePrecioTerrestreFromSource(p);
 
@@ -1712,6 +2025,16 @@ export default defineComponent({
           : [];
       draft.talleresCapacidadVehiculos =
         p.talleresCapacidadVehiculos ?? p.talleres_capacidad_vehiculos ?? null;
+      draft.talleresDireccion = p.talleresDireccion ?? p.talleres_direccion ?? "";
+      draft.talleresPrecios = p.talleresPrecios ?? p.talleres_precios ?? {};
+      draft.talleresReservaCitas = p.talleresReservaCitas ?? p.talleres_reserva_citas ?? false;
+      draft.talleresHorarioInicio = p.talleresHorarioInicio ?? p.talleres_horario_inicio ?? "";
+      draft.talleresHorarioFin = p.talleresHorarioFin ?? p.talleres_horario_fin ?? "";
+      draft.talleresDiasDisponibles = Array.isArray(p.talleresDiasDisponibles)
+        ? [...p.talleresDiasDisponibles]
+        : Array.isArray(p.talleres_dias_disponibles)
+          ? [...p.talleres_dias_disponibles]
+          : [];
 
       // gps
       draft.gpsProviders = Array.isArray(p.gpsProviders)
@@ -1775,14 +2098,34 @@ export default defineComponent({
         nombreChofer: "",
         chapa: "",
         tipoTransporte: "",
+        cargasEspeciales: [],
+        nuevaCargaEspecial: "",
       });
     }
     function removeTransport(i: number) {
       draft.transportes.splice(i, 1);
     }
 
+    function addCargaEspecialTransporte(transportIdx: number) {
+      const t = draft.transportes[transportIdx];
+      const v = t.nuevaCargaEspecial && t.nuevaCargaEspecial.trim();
+      if (!v) return;
+      if (!t.cargasEspeciales) {
+        t.cargasEspeciales = [];
+      }
+      t.cargasEspeciales.push(v);
+      t.nuevaCargaEspecial = "";
+    }
+
+    function removeCargaEspecialTransporte(transportIdx: number, cargaIdx: number) {
+      const t = draft.transportes[transportIdx];
+      if (t.cargasEspeciales) {
+        t.cargasEspeciales.splice(cargaIdx, 1);
+      }
+    }
+
     function addAyudante() {
-      draft.ayudantes.push({ nombre: "", apellidos: "", ci: "" });
+      draft.ayudantes.push({ nombre: "", apellidos: "", ci: "", direccion: "" });
     }
     function removeAyudante(i: number) {
       draft.ayudantes.splice(i, 1);
@@ -1893,13 +2236,19 @@ export default defineComponent({
           const prestatarioPayload: any = {
             tipoCarga: draft.tipoCarga,
             contenedor: draft.contenedor,
-            transportes: draft.transportes.map((t: any) => ({ ...t })),
+            transportes: draft.transportes.map((t: any) => ({
+              nombreChofer: t.nombreChofer,
+              chapa: t.chapa,
+              tipoTransporte: t.tipoTransporte,
+              cargasEspeciales: t.cargasEspeciales || [],
+            })),
             cargasEspeciales: [...draft.cargasEspeciales],
             rating: draft.rating,
             licencia: { ...draft.licencia },
             ayudantes: draft.ayudantes.map((h: any) => ({ ...h })),
             maxWeight: draft.maxWeight,
             maxVolume: draft.maxVolume,
+            autorizaIsotanquePeligrosas: draft.autorizaIsotanquePeligrosas,
             servicios: normalizeServiciosList(draft.servicios),
 
             ...(serviciosIncluyeTerrestre(draft.servicios)
@@ -2064,6 +2413,8 @@ export default defineComponent({
       toggleEdit,
       addTransport,
       removeTransport,
+      addCargaEspecialTransporte,
+      removeCargaEspecialTransporte,
       addAyudante,
       removeAyudante,
       cargaOptions,
@@ -2091,6 +2442,7 @@ export default defineComponent({
       hasTalleres,
       hasGPS,
       hasAlojamiento,
+      formatContenedorDisplay,
     };
   },
 });
@@ -2148,5 +2500,117 @@ export default defineComponent({
 .badge {
   font-size: 0.8rem;
   padding: 0.35rem 0.5rem;
+}
+</style>
+<style lang="scss" scoped>
+.rating-card {
+  background: #fafafa;
+  border: 1px solid #e4e6ef;
+  border-radius: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.rating-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+}
+
+/* ===========================
+   Estrellas
+=========================== */
+
+.rating-star {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.rating-star:hover {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.rating-star:active {
+  transform: scale(1.05);
+}
+
+.rating-star.bi-star-fill,
+.rating-star.bi-star-half {
+  filter: drop-shadow(
+    0 2px 4px rgba(255, 193, 7, 0.25)
+  );
+}
+
+/* ===========================
+   Hint informativo
+=========================== */
+
+.rating-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.08),
+    rgba(255, 248, 220, 0.45)
+  );
+
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 0.75rem;
+
+  color: #6c757d;
+  font-size: 0.85rem;
+
+  animation: fadeInUp 0.5s ease;
+}
+
+.rating-hint i {
+  color: #f59e0b;
+  font-size: 1rem;
+  animation: pulseStars 2.5s infinite;
+}
+
+.rating-hint strong {
+  color: #495057;
+  font-weight: 700;
+}
+
+/* ===========================
+   Animaciones
+=========================== */
+
+.fade-up-enter-active {
+  transition: all 0.4s ease;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseStars {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
 }
 </style>

@@ -49,6 +49,13 @@ import { ProposalAlquiler } from './src/proposals_alquiler/entities/proposal-alq
 import { ProposalService } from './src/proposals_services/entities/proposal-service.entity';
 import { Peticion } from 'src/peticion/entities/peticion.entity';
 
+// Entidades de Taller
+import { TallerServicio } from './src/taller-servicio/entities/taller-servicio.entity';
+import { TallerHorario } from './src/taller-horario/entities/taller-horario.entity';
+import { CitaTaller } from './src/cita-taller/entities/cita-taller.entity';
+import { TipoServicioMecanico } from './src/tipo-servicio-mecanico/entities/tipo-servicio-mecanico.entity';
+import { Tipocarga } from './src/tipocarga/entities/tipocarga.entity';
+
 dotenv.config(); // Carga las variables de entorno desde el archivo .env
 export const config: TypeOrmModuleOptions = {
   type: 'postgres',
@@ -58,7 +65,7 @@ export const config: TypeOrmModuleOptions = {
   port: parseInt(process.env.DB_PORT),
   username: process.env.DB_USER,
   migrations: ['src/database/migrations/*.ts'],
-  synchronize: true,
+  synchronize: false,
 
   entities: [
     Customer,
@@ -107,6 +114,12 @@ export const config: TypeOrmModuleOptions = {
     ProposalAlquiler,
     ProposalService,
     Peticion,
+    // Entidades de Taller
+    TallerServicio,
+    TallerHorario,
+    CitaTaller,
+    TipoServicioMecanico,
+    Tipocarga,
   ],
 };
 

@@ -17,6 +17,7 @@ import { ViaMode } from 'src/carga/enum/vias';
 import { Brackets } from 'typeorm';
 
 type ServiceKey = 'alojamiento' | 'gps' | 'talleres';
+type PrestatarioQueryFilters = Record<string, string | undefined>;
 
 @Injectable()
 export class PrestatarioService {
@@ -81,6 +82,18 @@ export class PrestatarioService {
       (dto as any).talleresCapacidadVehiculos ??
       (dto as any).talleres_capacidad_vehiculos ??
       null;
+    const talleresDireccion =
+      (dto as any).talleresDireccion ?? (dto as any).talleres_direccion ?? null;
+    const talleresPrecios =
+      (dto as any).talleresPrecios ?? (dto as any).talleres_precios ?? null;
+    const talleresReservaCitas =
+      (dto as any).talleresReservaCitas ?? (dto as any).talleres_reserva_citas ?? false;
+    const talleresHorarioInicio =
+      (dto as any).talleresHorarioInicio ?? (dto as any).talleres_horario_inicio ?? null;
+    const talleresHorarioFin =
+      (dto as any).talleresHorarioFin ?? (dto as any).talleres_horario_fin ?? null;
+    const talleresDiasDisponibles =
+      (dto as any).talleresDiasDisponibles ?? (dto as any).talleres_dias_disponibles ?? [];
 
     const gpsProviders =
       (dto as any).gpsProviders ?? (dto as any).gps_providers ?? [];
@@ -154,6 +167,7 @@ export class PrestatarioService {
       maxVolume: (dto as any).maxVolume ?? null,
       servicios: servicios ?? null,
       conditions: (dto as any).conditions ?? null,
+      defaultAereo: (dto as any).defaultAereo ?? false,
 
       // --- campos nuevos (camelCase) ---
       metrosDisponiblesAlquiler: metrosDisponiblesAlquiler,
@@ -164,6 +178,12 @@ export class PrestatarioService {
       talleresHorario: talleresHorario,
       talleresServicios: talleresServicios,
       talleresCapacidadVehiculos: talleresCapacidadVehiculos,
+      talleresDireccion: talleresDireccion,
+      talleresPrecios: talleresPrecios,
+      talleresReservaCitas: talleresReservaCitas,
+      talleresHorarioInicio: talleresHorarioInicio,
+      talleresHorarioFin: talleresHorarioFin,
+      talleresDiasDisponibles: talleresDiasDisponibles,
 
       gpsProviders: gpsProviders,
       gpsDevicesAvailable: gpsDevicesAvailable,
@@ -203,6 +223,149 @@ export class PrestatarioService {
     }
 
     return this.prestatarioRepo.findOne({ where: { id: saved.id } });
+  }
+
+  async findFirst( 
+    filters: PrestatarioQueryFilters,
+    ): Promise<Prestatario> {
+      const qb = this.prestatarioRepo
+        .createQueryBuilder('p')
+        .leftJoinAndSelect('p.user', 'user');
+
+      for (const [key, value] of Object.entries(filters)) {
+        if (value === undefined || value === '') {
+          continue;
+        }
+
+        switch (key) {
+          case 'via':
+            qb.andWhere(
+              'p.servicios IS NOT NULL AND (:via = ANY(p.servicios) OR :ultimaMilla = ANY(p.servicios))',
+              {
+                via: value,
+                ultimaMilla: 'ultima_milla',
+              },
+            );
+            break;
+
+          case 'email':
+            qb.andWhere('LOWER(user.email) = LOWER(:email)', {
+              email: value.trim(),
+            });
+            break;
+
+          case 'tipoCarga':
+            qb.andWhere('p.tipoCarga = :tipoCarga', {
+              tipoCarga: value,
+            });
+            break;
+
+          case 'disponible':
+            if (value !== 'true' && value !== 'false') {
+              throw new BadRequestException(
+                'disponible debe ser true o false',
+              );
+            }
+
+            qb.andWhere('p.disponible = :disponible', {
+              disponible: value === 'true',
+            });
+            break;
+
+          case 'esTaller':
+            if (value !== 'true' && value !== 'false') {
+              throw new BadRequestException(
+                'esTaller debe ser true o false',
+              );
+            }
+
+            qb.andWhere('p.es_taller = :esTaller', {
+              esTaller: value === 'true',
+            });
+            break;
+
+          case 'ratingMin':
+            qb.andWhere(
+              'p.rating IS NOT NULL AND p.rating >= :ratingMin',
+              {
+                ratingMin: Number(value),
+              },
+            );
+            break;
+
+          case 'maxWeightMin':
+            qb.andWhere(
+              'p.maxWeight IS NOT NULL AND p.maxWeight >= :maxWeightMin',
+              {
+                maxWeightMin: Number(value),
+              },
+            );
+            break;
+
+          case 'maxVolumeMin':
+            qb.andWhere(
+              'p.maxVolume IS NOT NULL AND p.maxVolume >= :maxVolumeMin',
+              {
+                maxVolumeMin: Number(value),
+              },
+            );
+            break;
+            
+          case 'defaultAereo':
+            if (value !== 'true' && value !== 'false') {
+              throw new BadRequestException(
+                'defaultAereo debe ser true o false',
+              );
+            }
+
+            qb.andWhere('p.default_aereo = :defaultAereo', {
+              defaultAereo: value === 'true',
+            });
+            break;
+    
+          default:
+            throw new BadRequestException(
+              `Filtro no permitido: ${key}`,
+            );
+        }
+      }
+
+    qb.orderBy('p.rating', 'DESC')
+      .addOrderBy('p.id', 'ASC')
+      .limit(1);
+
+    const prestatario = await qb.getOne();
+
+    if (!prestatario) {
+      throw new NotFoundException(
+        'No se encontró ningún prestatario con los filtros especificados',
+      );
+    }
+
+    return prestatario;
+  }
+
+  async findFirstMatchingByCapacity(
+    tipoCarga: TipoCarga,
+    weight?: number,
+    volume?: number,
+    via?: ViaMode,
+  ): Promise<Prestatario> {
+    const prestatarios = await this.findMatchingByCapacity(
+      tipoCarga,
+      weight,
+      volume,
+      via,
+      1,
+    );
+
+    if (!prestatarios.length) {
+      throw new NotFoundException(
+        `No se encontró un prestatario compatible para la vía ${via}`,
+      );
+    }
+
+    return prestatarios[0];
   }
 
   /** Crear manual (admin) */
@@ -262,17 +425,17 @@ export class PrestatarioService {
       });
     }
 
-    // filtro por vía: el prestatario debe soportar la misma vía O 'multimodal'
+    // filtro por vía: el prestatario debe soportar la misma vía O 'ultima_milla'
     if (via) {
       // Normalizamos a string por si ViaMode es enum
       const viaStr = String(via);
-      const multiStr = 'multimodal';
+      const ultimaMillaStr = 'ultima_milla';
 
       // Usamos Postgres ANY sobre arreglo p.servicios
       // rechazamos prestatarios sin 'servicios' explícito (seguridad)
       qb.andWhere(
-        'p.servicios IS NOT NULL AND ( :via = ANY(p.servicios) OR :multi = ANY(p.servicios) )',
-        { via: viaStr, multi: multiStr },
+        'p.servicios IS NOT NULL AND ( :via = ANY(p.servicios) OR :ultimaMilla = ANY(p.servicios) )',
+        { via: viaStr, ultimaMilla: ultimaMillaStr },
       );
     }
 
@@ -307,6 +470,9 @@ export class PrestatarioService {
     if (dto.maxWeight !== undefined) p.maxWeight = dto.maxWeight;
     if (dto.servicios !== undefined) p.servicios = dto.servicios;
     if (dto.conditions !== undefined) p.conditions = dto.conditions;
+    if (dto.defaultAereo !== undefined) {
+      p.defaultAereo = Boolean(dto.defaultAereo);
+    }
 
     // Compatibilidad: aceptar tanto camelCase como snake_case en update DTO
 
@@ -329,6 +495,18 @@ export class PrestatarioService {
       p.talleresServicios = anyDto.talleresServicios;
     if (anyDto.talleresCapacidadVehiculos !== undefined)
       p.talleresCapacidadVehiculos = anyDto.talleresCapacidadVehiculos;
+    if (anyDto.talleresDireccion !== undefined)
+      p.talleresDireccion = anyDto.talleresDireccion;
+    if (anyDto.talleresPrecios !== undefined)
+      p.talleresPrecios = anyDto.talleresPrecios;
+    if (anyDto.talleresReservaCitas !== undefined)
+      p.talleresReservaCitas = anyDto.talleresReservaCitas;
+    if (anyDto.talleresHorarioInicio !== undefined)
+      p.talleresHorarioInicio = anyDto.talleresHorarioInicio;
+    if (anyDto.talleresHorarioFin !== undefined)
+      p.talleresHorarioFin = anyDto.talleresHorarioFin;
+    if (anyDto.talleresDiasDisponibles !== undefined)
+      p.talleresDiasDisponibles = anyDto.talleresDiasDisponibles;
 
     // GPS (camelCase)
     if (anyDto.gpsProviders !== undefined) p.gpsProviders = anyDto.gpsProviders;

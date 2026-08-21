@@ -1,0 +1,25 @@
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = CU
+ST = La Habana
+L = La Habana
+O = SysCargo
+OU = Dev
+CN = *.syscargo.cu
+
+[v3_req]
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = syscargo.cu
+DNS.2 = *.syscargo.cu
+DNS.3 = tms.syscargo.cu
+DNS.4 = admin.syscargo.cu
+DNS.5 = api.syscargo.cu
+DNS.6 = tmsdb.syscargo.cu

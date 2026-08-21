@@ -76,4 +76,13 @@ export class User extends BasicEntity {
 
   @Column({ nullable: true })
   comercial_code: number;
+
+  @Column({ nullable: true, default: 0 })
+  loginAttempts: number;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  lockedUntil: Date;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  lastLoginAttempt: Date;
 }
